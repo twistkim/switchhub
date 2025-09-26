@@ -75,10 +75,10 @@ $curClean = i18n_current_path_clean(); // 현재 경로에서 언어 프리픽�
           <div class="relative">
             <label for="langDesktop" class="sr-only">Language</label>
             <select id="langDesktop" class="px-3 py-1.5 rounded-md border text-sm bg-white hover:border-gray-400">
-              <option value="<?= htmlspecialchars(lang_url($curClean, 'ko'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='ko'?'selected':'' ?>>Korean</option>
-              <option value="<?= htmlspecialchars(lang_url($curClean, 'th'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='th'?'selected':'' ?>>Thai</option>
+              <option value="<?= htmlspecialchars(lang_url($curClean, 'ko'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='ko'?'selected':'' ?>>한국어</option>
+              <option value="<?= htmlspecialchars(lang_url($curClean, 'th'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='th'?'selected':'' ?>>ไทย</option>
               <option value="<?= htmlspecialchars(lang_url($curClean, 'en'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='en'?'selected':'' ?>>English</option>
-              <option value="<?= htmlspecialchars(lang_url($curClean, 'my'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='my'?'selected':'' ?>>Myanmar</option>
+              <option value="<?= htmlspecialchars(lang_url($curClean, 'my'), ENT_QUOTES, 'UTF-8') ?>" <?= APP_LANG==='my'?'selected':'' ?>>မြန်မာ</option>
             </select>
           </div>
         </nav>
