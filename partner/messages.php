@@ -19,7 +19,6 @@ $limit  = 20;
 $offset = ($page - 1) * $limit;
 $show   = ($_GET['show'] ?? 'all'); // all|archived|unread
 
-// 내가 참여자인 스레드 목록 (최신순)
 $sql = "
   SELECT
     mt.id,
@@ -33,7 +32,7 @@ $sql = "
        FROM message_participants mp2
        JOIN users u ON u.id = mp2.user_id
       WHERE mp2.thread_id = mt.id
-        AND mp2.user_id <> :uid
+        AND mp2.user_id <> :uid_other
       ORDER BY mp2.id ASC
       LIMIT 1) AS other_name,
     -- 미읽음 여부
@@ -41,7 +40,7 @@ $sql = "
       SELECT 1
         FROM messages m
         LEFT JOIN message_participants mp3
-               ON mp3.thread_id = m.thread_id AND mp3.user_id = :uid
+               ON mp3.thread_id = m.thread_id AND mp3.user_id = :uid_unread
        WHERE m.thread_id = mt.id
          AND m.is_deleted = 0
          AND (mp3.last_read_at IS NULL OR m.created_at > mp3.last_read_at)
@@ -54,11 +53,15 @@ $sql = "
       LIMIT 1) AS last_body
   FROM message_threads mt
   JOIN message_participants mp
-    ON mp.thread_id = mt.id AND mp.user_id = :uid
+    ON mp.thread_id = mt.id AND mp.user_id = :uid_main
   WHERE 1
 ";
 
-$params = [':uid' => $userId];
+$params = [
+  ':uid_main'   => $userId,
+  ':uid_other'  => $userId,
+  ':uid_unread' => $userId,
+];
 
 // 보기 필터
 if ($show === 'archived') {
@@ -68,23 +71,29 @@ if ($show === 'archived') {
               SELECT 1
                 FROM messages m
                 LEFT JOIN message_participants mp3
-                       ON mp3.thread_id = m.thread_id AND mp3.user_id = :uid
+                       ON mp3.thread_id = m.thread_id AND mp3.user_id = :uid_unread2
                WHERE m.thread_id = mt.id
                  AND m.is_deleted = 0
                  AND (mp3.last_read_at IS NULL OR m.created_at > mp3.last_read_at)
             ) ";
+  $params[':uid_unread2'] = $userId;
 } else {
   // all (보관 제외로 보고 싶으면 아래 주석 해제)
   // $sql .= " AND mp.is_archived = 0 ";
 }
 
 $sql .= " ORDER BY mt.updated_at DESC, mt.id DESC
-          LIMIT :limit OFFSET :offset";
+          LIMIT :lim OFFSET :off";
 
 $st = $pdo->prepare($sql);
-$st->bindValue(':uid', $userId, PDO::PARAM_INT);
-$st->bindValue(':limit', $limit, PDO::PARAM_INT);
-$st->bindValue(':offset', $offset, PDO::PARAM_INT);
+$st->bindValue(':uid_main',   $userId, PDO::PARAM_INT);
+$st->bindValue(':uid_other',  $userId, PDO::PARAM_INT);
+$st->bindValue(':uid_unread', $userId, PDO::PARAM_INT);
+if (isset($params[':uid_unread2'])) {
+  $st->bindValue(':uid_unread2', $userId, PDO::PARAM_INT);
+}
+$st->bindValue(':lim', (int)$limit, PDO::PARAM_INT);
+$st->bindValue(':off', (int)$offset, PDO::PARAM_INT);
 $st->execute();
 $threads = $st->fetchAll() ?: [];
 
@@ -108,11 +117,11 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
 
   <div class="flex items-center gap-2 ml-auto">
     <div class="flex gap-2">
-      <a href="/partner/messages.php?show=all" class="px-3 py-1.5 rounded border <?= $show==='all'?'bg-gray-900 text-white':'bg-white' ?>">All</a>
-      <a href="/partner/messages.php?show=unread" class="px-3 py-1.5 rounded border <?= $show==='unread'?'bg-gray-900 text-white':'bg-white' ?>"><?= __('messages.unread') ?: '미읽음' ?></a>
-      <a href="/partner/messages.php?show=archived" class="px-3 py-1.5 rounded border <?= $show==='archived'?'bg-gray-900 text-white':'bg-white' ?>"><?= __('messages.archived') ?: '보관됨' ?></a>
+      <a href="<?= htmlspecialchars(lang_url('/partner/messages.php', APP_LANG, ['show'=>'all']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border <?= $show==='all'?'bg-gray-900 text-white':'bg-white' ?>">All</a>
+      <a href="<?= htmlspecialchars(lang_url('/partner/messages.php', APP_LANG, ['show'=>'unread']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border <?= $show==='unread'?'bg-gray-900 text-white':'bg-white' ?>"><?= __('messages.unread') ?: '미읽음' ?></a>
+      <a href="<?= htmlspecialchars(lang_url('/partner/messages.php', APP_LANG, ['show'=>'archived']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border <?= $show==='archived'?'bg-gray-900 text-white':'bg-white' ?>"><?= __('messages.archived') ?: '보관됨' ?></a>
     </div>
-    <a href="/message_start.php" class="px-3 py-1.5 rounded bg-primary text-white hover:bg-primary-dark whitespace-nowrap"><?= __('messages.new') ?: '새 메시지' ?></a>
+    <a href="<?= htmlspecialchars(lang_url('/message_start.php'), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded bg-primary text-white hover:bg-primary-dark whitespace-nowrap"><?= __('messages.new') ?: '새 메시지' ?></a>
   </div>
 </div>
 
@@ -124,7 +133,7 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
   <div class="space-y-3">
     <?php foreach ($threads as $t): ?>
       <?php
-        $threadUrl = '/partner/message_view.php?thread_id=' . (int)$t['id'];
+        $threadUrl = lang_url('/partner/message_view.php', APP_LANG, ['thread_id' => (int)$t['id']]);
       ?>
       <div class="bg-white border rounded p-4 hover:shadow transition">
         <div class="flex items-start justify-between gap-3">
@@ -163,7 +172,7 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
 
             <div class="flex gap-1 justify-end mt-2">
               <!-- 읽음 처리 -->
-              <form method="post" action="/message_action.php">
+              <form method="post" action="<?= htmlspecialchars(lang_url('/message_action.php'), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" name="action" value="mark_read">
                 <input type="hidden" name="thread_id" value="<?= (int)$t['id'] ?>">
@@ -172,7 +181,7 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
 
               <?php if ((int)$t['archived'] === 1): ?>
                 <!-- 보관 해제 -->
-                <form method="post" action="/message_action.php">
+                <form method="post" action="<?= htmlspecialchars(lang_url('/message_action.php'), ENT_QUOTES, 'UTF-8') ?>">
                   <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
                   <input type="hidden" name="action" value="unarchive">
                   <input type="hidden" name="thread_id" value="<?= (int)$t['id'] ?>">
@@ -180,7 +189,7 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
                 </form>
               <?php else: ?>
                 <!-- 보관 -->
-                <form method="post" action="/message_action.php" onsubmit="return confirm('이 대화를 보관하시겠어요?');">
+                <form method="post" action="<?= htmlspecialchars(lang_url('/message_action.php'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('이 대화를 보관하시겠어요?');">
                   <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
                   <input type="hidden" name="action" value="archive">
                   <input type="hidden" name="thread_id" value="<?= (int)$t['id'] ?>">
@@ -197,10 +206,10 @@ include __DIR__ . '/../partials/header_partner.php'; // 파트너 전용 헤더 
   <!-- (간단) 다음 페이지만 있는 페이징 -->
   <div class="mt-6 flex justify-center gap-2">
     <?php if ($page > 1): ?>
-      <a class="px-3 py-1.5 rounded border hover:bg-gray-50" href="/partner/messages.php?show=<?= urlencode($show) ?>&page=<?= $page-1 ?>">‹ <?= __('common.prev') ?: '이전' ?></a>
+      <a class="px-3 py-1.5 rounded border hover:bg-gray-50" href="<?= htmlspecialchars(lang_url('/partner/messages.php', APP_LANG, ['show'=>$show, 'page'=>$page-1]), ENT_QUOTES, 'UTF-8') ?>">‹ <?= __('common.prev') ?: '이전' ?></a>
     <?php endif; ?>
     <?php if (count($threads) === $limit): ?>
-      <a class="px-3 py-1.5 rounded border hover:bg-gray-50" href="/partner/messages.php?show=<?= urlencode($show) ?>&page=<?= $page+1 ?>"><?= __('common.next') ?: '다음' ?> ›</a>
+      <a class="px-3 py-1.5 rounded border hover:bg-gray-50" href="<?= htmlspecialchars(lang_url('/partner/messages.php', APP_LANG, ['show'=>$show, 'page'=>$page+1]), ENT_QUOTES, 'UTF-8') ?>"><?= __('common.next') ?: '다음' ?> ›</a>
     <?php endif; ?>
   </div>
 <?php endif; ?>

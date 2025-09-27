@@ -4,8 +4,8 @@ return [
   'nav.home'        => 'Home',
   'nav.products'    => 'Products',
   'nav.cart'        => 'Cart',
-  'nav.my'          => 'My Page',
-  'nav.partner'     => 'Partner Dashboard',
+  'nav.mypage'          => 'My Page',
+  'nav.partner_dashboard'     => 'Partner Dashboard',
   'nav.admin'       => 'Admin Dashboard',
   'nav.login'       => 'Login',
   'nav.register'    => 'Register',
@@ -15,6 +15,7 @@ return [
   'nav.lang.th'     => 'Thai',
   'nav.lang.en'     => 'English',
   'nav.lang.my'     => 'Myanmar',
+  'nav.partner_apply'     => 'Partner',
 
   // Home
   'home.headline'           => 'The new standard of phone trading in Thailand',
@@ -76,6 +77,7 @@ return [
 
   // Product (extra)
   'product.message_partner'    => 'Contact Partner',
+  'product.price.unit'    => 'THB',
 
   // Common
   'common.back'                => 'Back',

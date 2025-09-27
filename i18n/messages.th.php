@@ -4,8 +4,8 @@ return [
   'nav.home'        => 'หน้าแรก',
   'nav.products'    => 'สินค้า',
   'nav.cart'        => 'ตะกร้า',
-  'nav.my'          => 'บัญชีของฉัน',
-  'nav.partner'     => 'แดชบอร์ดพาร์ทเนอร์',
+  'nav.mypage'          => 'บัญชีของฉัน',
+  'nav.partner_dashboard'     => 'แดชบอร์ดพาร์ทเนอร์',
   'nav.admin'       => 'แดชบอร์ดผู้ดูแล',
   'nav.login'       => 'เข้าสู่ระบบ',
   'nav.register'    => 'สมัครสมาชิก',
@@ -15,6 +15,7 @@ return [
   'nav.lang.th'     => 'ไทย',
   'nav.lang.en'     => 'อังกฤษ',
   'nav.lang.my'     => 'พม่า',
+  'nav.partner_apply'     => 'พาร์ทเนอร์',
 
   // Home
   'home.headline'            => 'มาตรฐานใหม่ของการซื้อขายโทรศัพท์มือสองในประเทศไทย',
@@ -76,6 +77,7 @@ return [
 
   // Product (extra)
   'product.message_partner'    => 'ติดต่อพาร์ทเนอร์',
+  'product.price.unit'    => 'THB',
 
   // Common
   'common.back'                => 'ย้อนกลับ',

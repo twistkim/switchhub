@@ -4,8 +4,8 @@ return [
   'nav.home'        => '홈',
   'nav.products'    => '상품',
   'nav.cart'        => '장바구니',
-  'nav.my'          => '마이페이지',
-  'nav.partner'     => '파트너 대시보드',
+  'nav.mypage'          => '마이페이지',
+  'nav.partner_dashboard'     => '파트너 대시보드',
   'nav.admin'       => '관리자 대시보드',
   'nav.login'       => '로그인',
   'nav.register'    => '회원가입',
@@ -15,6 +15,8 @@ return [
   'nav.lang.th'     => '태국어',
   'nav.lang.en'     => '영어',
   'nav.lang.my'     => '미얀마어',
+  'nav.partner_apply'     => '파트너',
+
 
   // Home
   'home.headline'        => '태국 중고폰 거래의 새로운 기준',
@@ -75,6 +77,7 @@ return [
 
   // Product (extra)
   'product.message_partner'    => '파트너에게 문의',
+  'product.price.unit'    => 'THB',
 
   // Common
   'common.back'                => '목록으로',

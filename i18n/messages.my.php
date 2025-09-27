@@ -4,8 +4,8 @@ return [
   'nav.home'        => 'ပင်မစာမျက်နှာ',
   'nav.products'    => 'ကုန်ပစ္စည်းများ',
   'nav.cart'        => 'စျေးဝယ်ထိုင်',
-  'nav.my'          => 'အကောင့်စာမျက်နှာ',
-  'nav.partner'     => 'ပူးပေါင်းသူ Dashboard',
+  'nav.mypage'          => 'အကောင့်စာမျက်နှာ',
+  'nav.partner_dashboard'     => 'ပူးပေါင်းသူ Dashboard',
   'nav.admin'       => 'စီမံခန့်ခွဲသူ Dashboard',
   'nav.login'       => 'လော့ဂ်အင်',
   'nav.register'    => 'စာရင်းသွင်းမည်',
@@ -15,6 +15,7 @@ return [
   'nav.lang.th'     => 'ထိုင်း',
   'nav.lang.en'     => 'အင်္ဂလိပ်',
   'nav.lang.my'     => 'မြန်မာ',
+  'nav.partner_apply'     => 'မိတ်ဖက်',
 
   // Home
   'home.headline'       => 'ထိုင်းနိုင်ငံတွင် ဖုန်းစျေးဝယ်ရောင်းဝယ်မှု၏ စံအသစ်',
@@ -75,6 +76,7 @@ return [
 
   // Product (extra)
   'product.message_partner'    => 'မိတ်ဖက်နှင့် ဆက်သွယ်ရန်',
+  'product.price.unit'    => 'THB',
 
   // Common
   'common.back'                => 'နောက်သို့',

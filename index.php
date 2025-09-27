@@ -39,8 +39,9 @@ if ($cat > 0) {
   $params[':cat'] = $cat;
 }
 if ($q !== '') {
-  $sql .= " AND (p.name LIKE :q OR p.description LIKE :q)";
-  $params[':q'] = '%' . $q . '%';
+  $sql .= " AND (p.name LIKE :q1 OR p.description LIKE :q2)";
+  $params[':q1'] = '%' . $q . '%';
+  $params[':q2'] = '%' . $q . '%';
 }
 
 $sql .= " ORDER BY FIELD(p.status,'on_sale','sold') ASC, p.created_at DESC LIMIT 48";
