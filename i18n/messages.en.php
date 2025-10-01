@@ -83,4 +83,17 @@ return [
   'common.back'                => 'Back',
   'common.prev'                => 'Prev',
   'common.next'                => 'Next',
+
+
+  // review
+  'product.reviews'           => '리뷰',
+  'product.reviews_count'     => '리뷰',
+  'product.your_rating'       => '내 별점',
+  'product.review_placeholder'=> '구매 후기를 남겨주세요.',
+  'product.review_submit'     => '리뷰 등록',
+  'product.review_update'     => '리뷰 수정',
+  'product.login_to_review'   => '리뷰를 쓰려면 로그인하세요.',
+  'product.only_after_delivery'=> '배송 완료된 주문만 리뷰를 작성할 수 있습니다.',
+  'product.no_reviews'        => '아직 리뷰가 없습니다.',
+  'product.write_review'      => '리뷰 쓰기',
 ];

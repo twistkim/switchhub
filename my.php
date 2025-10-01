@@ -237,6 +237,8 @@ include __DIR__ . '/partials/header.php';
                 <button class="px-4 py-2 rounded-md bg-primary text-white text-sm font-semibold">배송 완료 확인</button>
               </form>
 
+              
+
               <!-- 하자 신청 토글 버튼 -->
               <button type="button" class="px-4 py-2 rounded-md bg-red-50 text-red-700 text-sm font-semibold"
                       onclick="toggleClaim('claim-<?= (int)$o['id'] ?>')">
@@ -280,6 +282,17 @@ include __DIR__ . '/partials/header.php';
                 <?= htmlspecialchars(__('messages.contact_about_order') ?: '주문 관련 문의', ENT_QUOTES, 'UTF-8') ?>
               </a>
             </div>
+
+            <!-- 리뷰 쓰기 -->
+            <?php if ($o['status'] === 'delivered' || str_replace(' ', '', strtolower($o['status'])) === '배송완료'): ?>
+              <a href="<?= htmlspecialchars(
+                    lang_url('/product.php', APP_LANG, ['id'=>(int)$o['product_id']]).'#reviews',
+                    ENT_QUOTES, 'UTF-8'
+                  ) ?>"
+                class="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-700 text-white text-sm">
+                <?= htmlspecialchars(__('product.write_review') ?: '리뷰 쓰기', ENT_QUOTES, 'UTF-8') ?>
+              </a>
+            <?php endif; ?>
 
           </div>
         </div>

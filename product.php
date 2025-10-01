@@ -3,9 +3,12 @@
 $pageTitle = '상품 상세';
 $activeMenu = 'home';
 
-require_once __DIR__ . '/lib/db.php';
+
 require_once __DIR__ . '/auth/session.php';
 require_once __DIR__ . '/i18n/bootstrap.php';
+require_once __DIR__ . '/lib/db.php';
+
+ 
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -141,5 +144,22 @@ include __DIR__ . '/partials/header.php';
     if (el) el.src = url;
   }
 </script>
+
+<?php
+$productId = (int)($_GET['id'] ?? 0);
+
+ 
+ 
+try {
+  include __DIR__ . '/partials/reviews_block.php';
+} catch (Throwable $e) {
+  error_log('[product.php reviews_block] ' . $e->getMessage());
+  echo '<div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px;border-radius:8px;margin-top:8px">'
+     . '<strong>REVIEWS BLOCK ERROR</strong><br>'
+     . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+     . '</div>';
+}
+ 
+?>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>
