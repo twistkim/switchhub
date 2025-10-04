@@ -148,29 +148,40 @@ include __DIR__ . '/../partials/header_admin.php';
 
             <div class="mt-3 flex flex-wrap gap-2">
               <?php if ($r['status']==='pending'): ?>
-                <form method="post" action="/admin/partner_action.php" onsubmit="return confirm('승인 처리하시겠습니까?');">
+                <!-- 승인 -->
+                <form method="post" action="/admin/partner_approve.php" onsubmit="return confirm('승인 처리하시겠습니까?');">
                   <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                  <input type="hidden" name="action" value="approve">
                   <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                   <button class="px-3 py-1.5 rounded bg-green-600 text-white text-sm">승인</button>
                 </form>
-                <form method="post" action="/admin/partner_action.php" onsubmit="return confirm('거절 처리하시겠습니까?');">
+
+                <!-- 거절 -->
+                <form method="post" action="/admin/partner_reject.php" onsubmit="return confirm('거절 처리하시겠습니까?');">
                   <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                  <input type="hidden" name="action" value="reject">
                   <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                   <button class="px-3 py-1.5 rounded bg-red-600 text-white text-sm">거절</button>
                 </form>
-              <?php else: ?>
-                <form method="post" action="/admin/partner_action.php" onsubmit="return confirm('대기중으로 되돌리시겠습니까?');">
+
+                <!-- 대기중으로 되돌리기 -->
+                <form method="post" action="/admin/partner_reset.php" onsubmit="return confirm('대기중으로 되돌리시겠습니까?');">
                   <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                  <input type="hidden" name="action" value="reset">
                   <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                   <button class="px-3 py-1.5 rounded border text-sm">대기중으로 되돌리기</button>
                 </form>
+
+                
               <?php endif; ?>
+
+              <!-- 파트너 숨기기 -->
+                <form method="post" action="/admin/partner_hide.php" onsubmit="return confirm('이 파트너를 숨기시겠습니까?');">
+                  <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                  <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                  <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
+                  <button class="px-3 py-1.5 rounded bg-gray-600 text-white text-sm">숨기기</button>
+                </form>
             </div>
           </div>
         </div>
