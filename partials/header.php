@@ -52,6 +52,8 @@ $curClean = i18n_current_path_clean(); // 현재 경로에서 언어 프리픽�
             <a href="<?= htmlspecialchars(lang_url('/partner_apply.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.partner_apply') ?: 'Partner Apply' ?></a>
           <?php endif; ?>
 
+          <a href="<?= htmlspecialchars(lang_url('/partners.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.partner_stores') ?: 'Partner Stores' ?></a>
+
           <?php if ($me): ?>
             <?php if ($role === 'admin'): ?>
               <a href="<?= htmlspecialchars(lang_url('/admin/index.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.admin') ?: 'Admin' ?></a>
@@ -101,6 +103,8 @@ $curClean = i18n_current_path_clean(); // 현재 경로에서 언어 프리픽�
         <?php else: ?>
           <a href="<?= htmlspecialchars(lang_url('/partner_apply.php'), ENT_QUOTES, 'UTF-8') ?>" class="block px-3 py-2 rounded-md hover:bg-gray-50"><?= __('nav.partner_apply') ?: 'Partner Apply' ?></a>
         <?php endif; ?>
+
+        <a href="<?= htmlspecialchars(lang_url('/partners.php'), ENT_QUOTES, 'UTF-8') ?>" class="block px-3 py-2 rounded-md hover:bg-gray-50"><?= __('nav.partner_stores') ?: 'Partner Stores' ?></a>
 
         <?php if ($me): ?>
           <?php if ($role === 'admin'): ?>

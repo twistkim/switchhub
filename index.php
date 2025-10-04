@@ -9,6 +9,45 @@ require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/auth/session.php';      // 있으면
 require_once __DIR__ . '/i18n/bootstrap.php';
 
+// === 이미지 경로 보정: 상대경로 -> 절대경로(/로 시작) ===
+if (!function_exists('fix_img_src')) {
+  function fix_img_src(string $src): string {
+    $src = trim($src);
+    if ($src === '') return '/assets/placeholder.jpg';
+    // 이미 절대 URL이면 그대로
+    $scheme = parse_url($src, PHP_URL_SCHEME);
+    if ($scheme === 'http' || $scheme === 'https' || str_starts_with($src, '//')) {
+      return $src;
+    }
+    // 쿼리/해시 제거 없이, 경로만 보정
+    // ./ 또는 ../ 제거
+    $src = preg_replace('#^\./#', '', $src);
+    while (strpos($src, '../') === 0) {
+      $src = substr($src, 3);
+    }
+    // 언어 프리픽스(/ko, /en 등) 아래에서 상대경로가 /ko/uploads로 잘못 붙는 문제 방지
+    if ($src[0] !== '/') {
+      $src = '/' . $src; // 절대경로로 변환
+    }
+    // 중복 슬래시 축소 (http:// 패턴은 위에서 걸러서 안전)
+    $src = preg_replace('#/{2,}#', '/', $src);
+    return $src;
+  }
+}
+
+// === webp 표시 + jpg 폴백 인라인 헬퍼 ===
+if (!function_exists('img_with_webp_fallback')) {
+  function img_with_webp_fallback(string $src, string $alt = '', string $class = 'w-full h-56 object-cover'): void {
+    $altEsc = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
+    $srcEsc = htmlspecialchars($src, ENT_QUOTES, 'UTF-8');
+    // 단순 렌더로 문제 원인(경로/리라이트/CSS) 먼저 분리
+    echo '<img src="' . $srcEsc . '" alt="' . $altEsc . '" class="' . $class . '" loading="lazy"'
+       . ' onerror="this.onerror=null;this.src=\'/assets/placeholder.jpg\';"'
+       . '>';
+  }
+}
+// === /webp helper ===
+
 // 입력 파라미터
 $q   = isset($_GET['q'])   ? trim($_GET['q'])   : '';
 $cat = isset($_GET['cat']) ? (int)$_GET['cat']  : 0;
@@ -52,6 +91,11 @@ $products = $stmt->fetchAll();
 
 include __DIR__ . '/partials/header.php';
 ?>
+
+
+
+
+
 
 <!-- 헤드라인 & 검색 -->
 <section class="text-center mb-10">
@@ -106,7 +150,8 @@ include __DIR__ . '/partials/header.php';
         $name = htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8');
         $desc = htmlspecialchars(mb_strimwidth($p['description'] ?? '', 0, 90, '...', 'UTF-8'), ENT_QUOTES, 'UTF-8');
         $price = number_format((float)$p['price']);
-        $img = $p['primary_image_url'] ?: 'https://placehold.co/600x400?text=No+Image';
+        $imgRaw = $p['primary_image_url'] ?: 'https://placehold.co/600x400?text=No+Image';
+        $img = fix_img_src($imgRaw);
       ?>
       <?php
         // 메시지 버튼 노출 조건: 판매자 본인/관리자는 숨김
@@ -129,7 +174,7 @@ include __DIR__ . '/partials/header.php';
         <div class="bg-white border rounded-lg shadow-sm overflow-hidden transform group-hover:scale-[1.01] group-hover:shadow-md transition-all duration-200">
           <!-- 이미지 -->
           <a href="/product.php?id=<?= (int)$p['id'] ?>" class="block relative">
-            <img src="<?= htmlspecialchars($img, ENT_QUOTES, 'UTF-8') ?>" alt="<?= $name ?>" class="w-full h-56 object-cover<?= $imgExtra ?>">
+            <?php img_with_webp_fallback($img, $name, 'w-full h-56 object-cover' . $imgExtra); ?>
             <span class="absolute top-2 left-2 <?= $badgeClass ?> text-white text-xs font-semibold px-2.5 py-1 rounded-full z-10"><?= $badgeLabel ?></span>
           </a>
           <!-- 정보 -->

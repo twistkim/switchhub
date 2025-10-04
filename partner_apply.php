@@ -4,6 +4,8 @@ $activeMenu = 'partner';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/i18n/bootstrap.php';
 require_once __DIR__ . '/auth/csrf.php';
+require_once __DIR__ . '/config/maps.php';
+if (!defined('GOOGLE_MAPS_API_KEY')) { define('GOOGLE_MAPS_API_KEY', ''); }
 include __DIR__ . '/partials/header.php';
 
 $err = $_GET['err'] ?? '';
@@ -73,11 +75,17 @@ $msg = $_GET['msg'] ?? '';
       <input type="email" name="email" required class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="partner@example.co.th">
     </div>
 
-    <!-- 6) 사업장 주소 (태국 주소 자동완성 훅: 추후 확장) -->
+    <!-- 6) 사업장 주소 + 지도 + 좌표(자동완성) -->
     <div>
       <label class="block text-sm font-medium">사업장 주소</label>
-      <textarea name="business_address" rows="3" required class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="지번/도로명, 구·군·도, 우편번호 등"></textarea>
-      <p class="text-xs text-gray-500 mt-1">※ 추후 태국 주소 자동완성을 연동할 수 있습니다.</p>
+      <input type="text" id="store_address" name="store_address" required
+             class="mt-1 w-full border rounded-lg px-3 py-2"
+             placeholder="도로명/지번, 구/군/도, 우편번호">
+      <input type="hidden" id="store_lat" name="store_lat" value="">
+      <input type="hidden" id="store_lng" name="store_lng" value="">
+      <input type="hidden" id="store_place_id" name="store_place_id" value="">
+      <p class="text-xs text-gray-500 mt-1">주소 자동완성 후 지도에서 위치를 확인하세요.</p>
+      <div id="store_map" class="mt-3 w-full h-64 rounded-lg border"></div>
     </div>
 
     <div class="pt-4 flex gap-3">
@@ -89,7 +97,41 @@ $msg = $_GET['msg'] ?? '';
 
 <!-- (옵션) 태국 주소 자동완성 훅: 여기서 JS로 postcodes/province 데이터셋 연결 가능 -->
 <script>
-// TODO: 태국 주소 자동완성 연동시 여기에 스크립트 추가
+  // 구글 지도/자동완성 초기화
+  function initMapApply() {
+    const input  = document.getElementById('store_address');
+    const latEl  = document.getElementById('store_lat');
+    const lngEl  = document.getElementById('store_lng');
+    const pidEl  = document.getElementById('store_place_id');
+    const mapEl  = document.getElementById('store_map');
+
+    // 기본: 방콕 중심
+    const center = { lat: 13.7563, lng: 100.5018 };
+    const map = new google.maps.Map(mapEl, { center, zoom: 12 });
+    const marker = new google.maps.Marker({ map, position: center });
+
+    // Places 자동완성
+    const ac = new google.maps.places.Autocomplete(input, {
+      fields: ['formatted_address', 'geometry', 'place_id']
+    });
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (!place || !place.geometry) return;
+      const loc = place.geometry.location;
+      map.setCenter(loc); map.setZoom(15);
+      marker.setPosition(loc);
+      latEl.value = loc.lat();
+      lngEl.value = loc.lng();
+      pidEl.value = place.place_id || '';
+      if (place.formatted_address) input.value = place.formatted_address;
+    });
+
+    // 사용자가 수동으로 값 입력 후 포커스아웃 시에도 지오코딩 시도 (선택적 고도화 가능)
+    input.addEventListener('change', () => {
+      // 필요시 서버측 지오코딩 API 준비 후 확장
+    });
+  }
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=<?= GOOGLE_MAPS_API_KEY ?>&libraries=places&callback=initMapApply" async defer></script>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>
