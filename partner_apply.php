@@ -69,6 +69,19 @@ $msg = $_GET['msg'] ?? '';
       </div>
     </div>
 
+    <div>
+      <label class="block text-sm font-medium">매장 소개</label>
+      <textarea name="store_intro" rows="4" class="mt-1 w-full border rounded-lg px-3 py-2"
+                placeholder="매장 특징, 취급 기종 등"></textarea>
+    </div>
+
+    <!-- (선택) 매장 대표 이미지 -->
+    <div>
+      <label class="block text-sm font-medium">매장 대표 이미지 (JPG/PNG, 최대 5MB)</label>
+      <input type="file" name="store_hero" accept="image/*"
+            class="mt-1 w-full border rounded-lg px-3 py-2">
+    </div>
+
     <!-- 5) 이메일 -->
     <div>
       <label class="block text-sm font-medium">이메일</label>

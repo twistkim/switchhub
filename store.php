@@ -8,8 +8,22 @@ $activeMenu = 'partner_stores';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/i18n/bootstrap.php';
 require_once __DIR__ . '/auth/session.php';
-require_once __DIR__ . '/config/maps.php'; // GOOGLE_MAPS_API_KEY 정의 (없으면 빈 문자열)
-if (!defined('GOOGLE_MAPS_API_KEY')) { define('GOOGLE_MAPS_API_KEY', ''); }
+// Google Maps API 설정은 선택사항 (파일이 없어도 동작해야 함)
+$mapsCfg = __DIR__ . '/config/maps.php';
+if (is_file($mapsCfg)) {
+  require_once $mapsCfg; // GOOGLE_MAPS_API_KEY 를 정의할 수 있음
+}
+if (!defined('GOOGLE_MAPS_API_KEY')) {
+  define('GOOGLE_MAPS_API_KEY', '');
+}
+
+// i18n 헬퍼 안전 장치 (부재 시 폴백)
+if (!function_exists('__')) {
+  function __(string $key, array $vars = []) { return $key; }
+}
+if (!function_exists('lang_url')) {
+  function lang_url(string $path): string { return $path; }
+}
 
 // 간단 이미지 출력 헬퍼 (webp 여부 무시, 있는 주소 그대로 렌더)
 if (!function_exists('img_plain')) {
@@ -33,15 +47,25 @@ if ($profileId <= 0) {
 
 $pdo = db();
 
-// 프로필 조회 (공개된 프로필만)
+// partner_profiles 스키마 동적 탐색 (환경별 컬럼 차이 허용)
+$pfCols = $pdo->query("SHOW COLUMNS FROM partner_profiles")->fetchAll(PDO::FETCH_COLUMN);
+$has = function(string $c) use ($pfCols) { return in_array($c, $pfCols, true); };
+
+$sel = [
+  'pp.id', 'pp.user_id', 'pp.store_name', 'pp.intro', 'pp.phone', 'pp.is_published'
+];
+$optCols = [
+  'address_line1','address_line2','district','province','postal_code','country_code',
+  'lat','lng','place_id','hero_image_url','logo_image_url'
+];
+foreach ($optCols as $c) {
+  if ($has($c)) $sel[] = "pp.$c"; else $sel[] = "NULL AS $c";
+}
+$selectSql = implode(",\n    ", $sel) . ",\n    u.name AS owner_name, u.email AS owner_email";
+
 $sql = "
   SELECT
-    pp.id, pp.user_id, pp.store_name, pp.intro, pp.phone,
-    pp.address_line1, pp.address_line2, pp.district, pp.province, pp.postal_code, pp.country_code,
-    pp.lat, pp.lng, pp.place_id,
-    pp.hero_image_url, pp.logo_image_url,
-    pp.is_published,
-    u.name AS owner_name, u.email AS owner_email
+    $selectSql
   FROM partner_profiles pp
   JOIN users u ON u.id = pp.user_id
   WHERE pp.id = :id
@@ -51,10 +75,46 @@ $st = $pdo->prepare($sql);
 $st->execute([':id' => $profileId]);
 $store = $st->fetch(PDO::FETCH_ASSOC);
 
-if (!$store || (int)$store['is_published'] !== 1) {
+// 공개 여부: NULL(초기데이터) 또는 1 이면 통과
+if (!$store) {
   header('HTTP/1.1 404 Not Found');
   echo 'Store not found';
   exit;
+}
+if (isset($store['is_published']) && $store['is_published'] !== null && (int)$store['is_published'] !== 1) {
+  header('HTTP/1.1 403 Forbidden');
+  echo 'Store is not published';
+  exit;
+}
+
+if (isset($_GET['debug'])) {
+  try {
+    $uid = (int)$store['user_id'];
+    // A) 총 상품수 (seller_id 기준)
+    $dbg1 = $pdo->prepare("SELECT COUNT(*) FROM products WHERE seller_id=:uid");
+    $dbg1->execute([':uid'=>$uid]);
+    $total_all = (int)$dbg1->fetchColumn();
+
+    // B) 소프트 삭제 제외
+    $dbg2 = $pdo->prepare("SELECT COUNT(*) FROM products WHERE seller_id=:uid AND (is_deleted IS NULL OR is_deleted=0)");
+    $dbg2->execute([':uid'=>$uid]);
+    $total_visible = (int)$dbg2->fetchColumn();
+
+    // C) 상태별 카운트
+    $dbg3 = $pdo->prepare("SELECT status, COUNT(*) c FROM products WHERE seller_id=:uid GROUP BY status");
+    $dbg3->execute([':uid'=>$uid]);
+    $by_status = $dbg3->fetchAll(PDO::FETCH_ASSOC);
+
+    echo '<pre style="background:#fffbdd;border:1px solid #f6e05e;padding:8px;margin:8px 0;">'
+       . 'DEBUG store.products: user_id=' . htmlspecialchars((string)$uid, ENT_QUOTES, 'UTF-8') . "\n"
+       . '  total_all=' . $total_all . '  total_visible=' . $total_visible . "\n"
+       . '  by_status=' . htmlspecialchars(json_encode($by_status, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8')
+       . '</pre>';
+  } catch (Throwable $e) {
+    echo '<pre style="background:#ffe3e3;border:1px solid #ffb3b3;padding:8px;margin:8px 0;">'
+       . 'DEBUG ERROR: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+       . '</pre>';
+  }
 }
 
 // 주소 문자열 조합
@@ -71,38 +131,66 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 $per  = 24;
 $off  = ($page - 1) * $per;
 
-$sqlCnt = "
-  SELECT COUNT(*)
-  FROM products p
-  WHERE p.seller_id = :uid
-    AND (p.is_deleted IS NULL OR p.is_deleted = 0)
-";
-$st = $pdo->prepare($sqlCnt);
-$st->execute([':uid' => (int)$store['user_id']]);
-$totalProducts = (int)($st->fetchColumn() ?: 0);
+try {
+  $sqlCnt = "
+    SELECT COUNT(*)
+    FROM products p
+    WHERE p.seller_id = :uid
+      AND (p.is_deleted IS NULL OR p.is_deleted = 0)
+  ";
+  $st = $pdo->prepare($sqlCnt);
+  $st->execute([':uid' => (int)$store['user_id']]);
+  $totalProducts = (int)($st->fetchColumn() ?: 0);
 
-$sqlProducts = "
-  SELECT
-    p.id, p.name, p.price, p.status,
-    (
-      SELECT COALESCE(pi.image_url, pi.url, pi.file_path)
-      FROM product_images pi
-      WHERE pi.product_id = p.id
-      ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
-      LIMIT 1
-    ) AS primary_image_url
-  FROM products p
-  WHERE p.seller_id = :uid
-    AND (p.is_deleted IS NULL OR p.is_deleted = 0)
-  ORDER BY FIELD(p.status,'on_sale','for_sale','payment_confirmed','shipping','delivered','sold') ASC, p.created_at DESC
-  LIMIT :limit OFFSET :offset
-";
-$st = $pdo->prepare($sqlProducts);
-$st->bindValue(':uid', (int)$store['user_id'], PDO::PARAM_INT);
-$st->bindValue(':limit', $per, PDO::PARAM_INT);
-$st->bindValue(':offset', $off, PDO::PARAM_INT);
-$st->execute();
-$products = $st->fetchAll(PDO::FETCH_ASSOC);
+  // product_images 존재 여부 확인 + 컬럼 동적 구성 (image_url/url/file_path/path 등 환경차 대응)
+  $hasPi = (bool)$pdo->query("SHOW TABLES LIKE 'product_images'")->fetchColumn();
+  if ($hasPi) {
+    $piCols = $pdo->query("SHOW COLUMNS FROM product_images")->fetchAll(PDO::FETCH_COLUMN);
+    $candidates = [];
+    foreach (['image_url','url','file_path','path','src'] as $c) {
+      if (in_array($c, $piCols, true)) {
+        $candidates[] = 'pi.' . $c;
+      }
+    }
+    if (empty($candidates)) {
+      // 테이블은 있으나 사용할 수 있는 열이 없으면 NULL 처리
+      $imgSelect = 'NULL';
+    } else {
+      $imgSelect = 'COALESCE(' . implode(',', $candidates) . ')';
+    }
+
+    $imgExpr = "(SELECT $imgSelect FROM product_images pi WHERE pi.product_id = p.id ORDER BY ".
+               (in_array('is_primary',$piCols,true) ? 'pi.is_primary DESC,' : '').
+               (in_array('sort_order',$piCols,true) ? 'pi.sort_order ASC,' : '').
+               " pi.id ASC LIMIT 1) AS primary_image_url";
+  } else {
+    $imgExpr = "NULL AS primary_image_url";
+  }
+
+  $sqlProducts = "
+    SELECT
+      p.id, p.name, p.price, p.status,
+      $imgExpr
+    FROM products p
+    WHERE p.seller_id = :uid
+      AND (p.is_deleted IS NULL OR p.is_deleted = 0)
+    ORDER BY FIELD(p.status,'on_sale','for_sale','payment_confirmed','shipping','delivered','sold') ASC, p.created_at DESC
+    LIMIT :limit OFFSET :offset
+  ";
+  $st = $pdo->prepare($sqlProducts);
+  $st->bindValue(':uid', (int)$store['user_id'], PDO::PARAM_INT);
+  $st->bindValue(':limit', $per, PDO::PARAM_INT);
+  $st->bindValue(':offset', $off, PDO::PARAM_INT);
+  $st->execute();
+  $products = $st->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  // 문제 발생 시 제품 목록은 비우고, 디버그 요청이면 상세히 출력
+  $totalProducts = 0;
+  $products = [];
+  if (isset($_GET['debug'])) {
+    echo '<pre style="background:#fff3cd;border:1px solid #ffeeba;padding:8px;">'.htmlspecialchars('PRODUCTS SQL ERROR: '.$e->getMessage(), ENT_QUOTES, 'UTF-8').'</pre>';
+  }
+}
 
 // 상태 배지 스타일
 function product_status_badge(string $status): string {

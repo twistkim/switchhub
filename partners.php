@@ -9,6 +9,13 @@ require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/i18n/bootstrap.php';   // lang_url(), __() 사용
 require_once __DIR__ . '/auth/session.php';     // 로그인 여부 표시용(필수 아님)
 
+// DB 핸들 및 검색/페이지네이션 변수 초기화
+$pdo  = db();
+$q    = trim($_GET['q'] ?? '');
+$page = max(1, (int)($_GET['page'] ?? 1));
+$per  = 24; // 한 페이지 24개
+$off  = ($page - 1) * $per;
+
 // 간단 이미지 출력 헬퍼 (webp든 jpg든 그대로 렌더)
 if (!function_exists('img_plain')) {
   function img_plain(string $src = '', string $alt = '', string $class = 'w-full h-40 object-cover'): void {
@@ -19,19 +26,18 @@ if (!function_exists('img_plain')) {
   }
 }
 
-// 쿼리 파라미터
-$q    = trim($_GET['q'] ?? '');
-$page = max(1, (int)($_GET['page'] ?? 1));
-$per  = 24;
-$off  = ($page - 1) * $per;
-
-$pdo = db();
-
-// 검색용 WHERE
-$whereSql = "pp.is_published=1 AND u.role='partner'";
+// 검색용 WHERE (초기 데이터도 보이도록 완화)
+$whereSql = "(pp.is_published IS NULL OR pp.is_published = 1)";
 $params   = [];
+
+// 역할 강제 여부 (승격 전 파트너도 임시 노출하려면 false)
+$enforcePartnerRole = false; // 필요 시 true 로 변경
+if ($enforcePartnerRole) {
+  $whereSql .= " AND u.role='partner'";
+}
+
 if ($q !== '') {
-  $whereSql .= " AND (pp.store_name LIKE :like OR pp.province LIKE :like OR pp.district LIKE :like)";
+  $whereSql .= " AND (pp.store_name LIKE :like OR COALESCE(pp.province,'') LIKE :like OR COALESCE(pp.district,'') LIKE :like OR COALESCE(pp.address_line1,'') LIKE :like)";
   $params[':like'] = '%' . $q . '%';
 }
 
