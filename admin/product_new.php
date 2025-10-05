@@ -6,6 +6,7 @@ require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../i18n/bootstrap.php';
 require_once __DIR__ . '/../auth/csrf.php';
 require_once __DIR__ . '/../auth/guard.php';
+require_once __DIR__ . '/../partials/product_payment_methods_field.php'; // 추가
 
 require_role('admin');
 
@@ -101,6 +102,11 @@ include __DIR__ . '/../partials/header_admin.php';
       </div>
     </div>
 
+    <?php
+      // 판매 방식(일반판매/COD) 선택 — 최소 1개 필수
+      // admin 신규 등록 페이지에서는 $product 변수가 없으므로 null 전달
+      render_payment_methods_field(null);
+    ?>
     <div class="pt-4 flex gap-3">
       <button class="px-5 py-2.5 bg-primary text-white rounded-lg font-semibold">등록</button>
       <a href="/admin/orders.php" class="px-5 py-2.5 border rounded-lg">취소</a>

@@ -6,6 +6,7 @@ require_once __DIR__ . '/auth/session.php';
 require_once __DIR__ . '/i18n/bootstrap.php';
 require_once __DIR__ . '/auth/csrf.php';
 require_once __DIR__ . '/lib/cart.php';
+require_once __DIR__ . '/lib/order_payment.php'; // ← 추가
 
 $pdo = db();
 $cart = cart_get();
@@ -18,6 +19,7 @@ if (!empty($productIds)) {
   $in  = implode(',', array_fill(0, count($productIds), '?'));
   $sql = "
     SELECT p.id, p.name, p.price, p.status, p.approval_status,
+           p.payment_normal, p.payment_cod,
            (SELECT pi.image_url FROM product_images pi WHERE pi.product_id=p.id ORDER BY is_primary DESC, sort_order ASC, id ASC LIMIT 1) AS img
     FROM products p
     WHERE p.id IN ($in)
@@ -31,6 +33,94 @@ if (!empty($productIds)) {
     if ($r['approval_status']==='approved' && $r['status']==='on_sale') {
       $total += (float)$r['price'];
     }
+  }
+
+  // 결제 방식 허용 교집합 (장바구니 내 모든 결제가능 상품 기준)
+  $allowNormal = true; // 초기 true에서 교집합 AND
+  $allowCOD    = true;
+  $hasEligible = false;
+  foreach ($rows as $r) {
+    if ($r['approval_status']==='approved' && $r['status']==='on_sale') {
+      $hasEligible = true;
+      if ((int)($r['payment_normal'] ?? 0) !== 1) $allowNormal = false;
+      if ((int)($r['payment_cod'] ?? 0) !== 1)    $allowCOD    = false;
+    }
+  }
+  // eligible이 하나도 없다면(표시용) 기본 둘 다 허용
+  if (!$hasEligible) { $allowNormal = true; $allowCOD = true; }
+}
+
+// --- Helper: choose a valid initial status from orders.status enum ---
+if (!function_exists('orders_pick_initial_status')) {
+  function orders_pick_initial_status(PDO $pdo): string {
+    try {
+      $col = $pdo->query("SHOW COLUMNS FROM orders LIKE 'status'")->fetch();
+      if ($col && isset($col['Type']) && stripos($col['Type'], 'enum(') === 0) {
+        $enum = $col['Type']; // enum('a','b',...)
+        $vals = [];
+        if (preg_match_all("/'([^']+)'/", $enum, $m)) $vals = $m[1];
+        // 선호 순서: 환경별로 있는 값을 첫 번째로 선택
+        $prefs = ['payment_pending','pending_payment','deposit_pending','awaiting_payment','pending','created'];
+        foreach ($prefs as $p) {
+          if (in_array($p, $vals, true)) return $p;
+        }
+        if (!empty($vals)) return $vals[0];
+      }
+    } catch (Throwable $e) { /* ignore */ }
+    return 'pending';
+  }
+}
+
+// --- 주문 생성 처리 (결제 완료 버튼 POST) ---
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+    && ($_POST['action'] ?? '') === 'checkout') {
+  // CSRF 확인
+  if (!csrf_verify($_POST['csrf'] ?? null)) {
+    header('Location: /cart.php?err=bad_request'); exit;
+  }
+  // 로그인 확인
+  $me = $_SESSION['user'] ?? null;
+  if (!$me) { header('Location: /auth/login.php?next=/cart.php'); exit; }
+
+  // 결제 방식 파싱
+  $paymentMethod = op_parse_method($_POST); // 'normal' | 'cod'
+
+  // 주문 가능 항목만 추리기 (approved + on_sale)
+  $orderItems = [];
+  foreach ($rows as $r) {
+    if ($r['approval_status'] === 'approved' && $r['status'] === 'on_sale') {
+      $orderItems[] = (int)$r['id'];
+    }
+  }
+  if (empty($orderItems)) {
+    header('Location: /cart.php?err=empty_or_unavailable'); exit;
+  }
+
+  try {
+    $pdo->beginTransaction();
+    $initStatus = orders_pick_initial_status($pdo);
+    $st = $pdo->prepare("INSERT INTO orders (user_id, product_id, status, payment_method, created_at, updated_at)
+                         VALUES (:uid, :pid, :st, :pm, NOW(), NOW())");
+    foreach ($orderItems as $pid) {
+      $st->execute([
+        ':uid' => (int)$me['id'],
+        ':pid' => (int)$pid,
+        ':st'  => $initStatus, // enum 허용값 중 하나로 초기 상태 설정
+        ':pm'  => $paymentMethod,
+      ]);
+    }
+    // 장바구니 비우기
+    if (function_exists('cart_clear')) { cart_clear(); }
+    else { $_SESSION['cart'] = []; }
+    $pdo->commit();
+    header('Location: /my.php?msg=order_created');
+    exit;
+  } catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('checkout exception: ' . $e->getMessage());
+    $reason = rawurlencode($e->getMessage());
+    header('Location: /cart.php?err=exception&reason=' . $reason);
+    exit;
   }
 }
 
@@ -104,8 +194,10 @@ include __DIR__ . '/partials/header.php';
     <div class="mt-4 flex justify-center">
       <img src="https://placehold.co/240x240?text=QR" alt="QR" class="rounded border" />
     </div>
-    <form class="mt-6" method="post" action="/checkout.php" onsubmit="return confirm('결제를 완료하셨나요? 주문을 생성합니다. (관리자 입금 확인 후 진행됩니다)');">
+    <form id="checkoutForm" class="mt-6" method="post" action="/cart.php" onsubmit="return confirm('결제를 완료하셨나요? 주문을 생성합니다. (관리자 입금 확인 후 진행됩니다)');">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+      <input type="hidden" name="action" value="checkout">
+      <?php require_once __DIR__ . '/partials/checkout_payment_method.php'; ?>
       <button class="w-full px-4 py-2.5 rounded-md bg-green-600 text-white font-semibold">결제 완료</button>
     </form>
     <button class="w-full mt-2 px-4 py-2.5 rounded-md border" onclick="closePayModal()">닫기</button>

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../i18n/bootstrap.php';
 require_once __DIR__ . '/../auth/csrf.php';
 require_once __DIR__ . '/../auth/guard.php';
+require_once __DIR__ . '/../partials/product_payment_methods_field.php';
 require_role('partner');
 
 $pdo = db();
@@ -55,7 +56,23 @@ include __DIR__ . '/../partials/header_partner.php';
         </select>
       </div>
     </div>
+    <div>
+      <form method="post" action="/partner/product_save.php" enctype="multipart/form-data" class="space-y-4">
+        <!-- 기존: 상품명/설명/가격/카테고리/이미지 등 입력 필드 -->
 
+        <?php
+          // ✅ 판매 방식 체크박스 표시 (신규/수정 모두 대응)
+          // $product가 수정폼에서 세팅되어 있다면 그 값으로 프리체크 됩니다.
+          render_payment_methods_field($product ?? null);
+        ?>
+
+        <!-- 기존: 제출 버튼 영역 -->
+        <div class="pt-2">
+          <button type="submit" class="px-4 py-2 rounded bg-primary text-white">등록 요청</button>
+        </div>
+      </form>
+    </div>
+    
     <div>
       <label class="block text-sm font-medium">상세 설명</label>
       <textarea name="description" rows="4" class="mt-1 w-full border rounded px-3 py-2"></textarea>

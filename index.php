@@ -9,6 +9,27 @@ require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/auth/session.php';      // 있으면
 require_once __DIR__ . '/i18n/bootstrap.php';
 
+// 결제방식 배지 렌더러 로드 (partial 우선, 없으면 폴백)
+@include_once __DIR__ . '/partials/product_payment_badges.php';
+if (!function_exists('render_payment_badges')) {
+  function render_payment_badges(?array $product): void {
+    if (!$product) return;
+    $badges = [];
+    if ((int)($product['payment_normal'] ?? 0) === 1) $badges[] = '일반판매';
+    if ((int)($product['payment_cod'] ?? 0) === 1)    $badges[] = 'COD';
+    if (!$badges) return;
+    ?>
+    <div class="mt-2 flex flex-wrap gap-1.5" id="payment-badges">
+      <?php foreach ($badges as $b): ?>
+        <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-[11px] font-medium">
+          <?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?>
+        </span>
+      <?php endforeach; ?>
+    </div>
+    <?php
+  }
+}
+
 // === 이미지 경로 보정: 상대경로 -> 절대경로(/로 시작) ===
 if (!function_exists('fix_img_src')) {
   function fix_img_src(string $src): string {
@@ -60,6 +81,7 @@ $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->
 $sql = "
   SELECT
     p.id, p.name, p.description, p.price, p.status, p.release_year, p.category_id, p.seller_id,
+    p.payment_normal, p.payment_cod,
     (
       SELECT pi.image_url
       FROM product_images pi
@@ -175,12 +197,21 @@ include __DIR__ . '/partials/header.php';
           <!-- 이미지 -->
           <a href="/product.php?id=<?= (int)$p['id'] ?>" class="block relative">
             <?php img_with_webp_fallback($img, $name, 'w-full h-56 object-cover' . $imgExtra); ?>
-            <span class="absolute top-2 left-2 <?= $badgeClass ?> text-white text-xs font-semibold px-2.5 py-1 rounded-full z-10"><?= $badgeLabel ?></span>
+            <div class="absolute top-2 left-2 flex flex-wrap items-center gap-1 z-10">
+              <span class="<?= $badgeClass ?> text-white text-xs font-semibold px-2.5 py-1 rounded-full"><?= $badgeLabel ?></span>
+              <?php if ((int)($p['payment_normal'] ?? 0) === 1): ?>
+                <span class="bg-white/90 text-gray-800 text-[11px] font-medium px-2 py-0.5 rounded">일반판매</span>
+              <?php endif; ?>
+              <?php if ((int)($p['payment_cod'] ?? 0) === 1): ?>
+                <span class="bg-white/90 text-gray-800 text-[11px] font-medium px-2 py-0.5 rounded">COD</span>
+              <?php endif; ?>
+            </div>
           </a>
           <!-- 정보 -->
           <div class="p-4">
             <h3 class="text-lg font-bold text-gray-800 truncate"><a href="/product.php?id=<?= (int)$p['id'] ?>" class="hover:underline"><?= $name ?></a></h3>
             <p class="text-gray-600 mt-1 h-10 overflow-hidden text-ellipsis text-sm"><?= $desc ?></p>
+            <?php if (function_exists('render_payment_badges')) render_payment_badges($p ?? null); ?>
  
 
             <div class="mt-4 flex items-center justify-between gap-2">

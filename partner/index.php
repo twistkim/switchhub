@@ -6,6 +6,7 @@ require_once __DIR__ . '/../i18n/bootstrap.php';
 require_once __DIR__ . '/../auth/guard.php';
 require_role('partner');
 require_once __DIR__ . '/../auth/csrf.php';
+require_once __DIR__ . '/../partials/payment_method_badge.php';
 
 $pdo = db();
 $me  = $_SESSION['user'];
@@ -158,6 +159,7 @@ try {
     SELECT
       o.`id`             AS order_id,
       o.`status`         AS order_status,
+      o.`payment_method`,
       o.`tracking_number`,
       o.`created_at`     AS order_created_at,
       o.`product_id`,
@@ -193,6 +195,7 @@ try {
       SELECT
         o.`id`             AS order_id,
         o.`status`         AS order_status,
+        o.`payment_method`,
         o.`tracking_number`,
         o.`created_at`     AS order_created_at,
         o.`product_id`,
@@ -344,6 +347,10 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
               <div class="text-primary font-bold"><?= number_format($productPrice) ?> THB</div>
             </div>
             <div class="text-sm text-gray-600 mt-1">상태: <?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?> · 송장: <?= htmlspecialchars($r['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?> · 주문일: <?= htmlspecialchars($r['order_created_at'], ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="text-sm mt-1">
+              결제방식:
+              <?php if (function_exists('render_payment_method_badge')) render_payment_method_badge($r['payment_method'] ?? null); ?>
+            </div>
 
             <?php if ($can_ship): ?>
               <form method="post" action="/partner/order_action.php" class="mt-3 flex flex-wrap items-center gap-2" onsubmit="return confirm('송장을 저장하고 상태를 배송중으로 변경할까요?');">

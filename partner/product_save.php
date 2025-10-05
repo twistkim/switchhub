@@ -3,11 +3,13 @@ require_once __DIR__ . '/../lib/db.php';
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../auth/csrf.php';
 require_once __DIR__ . '/../auth/guard.php';
+require_once __DIR__ . '/../lib/product_payment.php'; // 추가: 판매방식 유틸
 require_role('partner');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_verify($_POST['csrf'] ?? null)) {
   header('Location: /partner/product_new.php'); exit;
 }
+$returnUrl = '/partner/product_new.php';
 
 $me  = $_SESSION['user'];
 $pdo = db();
@@ -23,15 +25,23 @@ if ($name==='' || $catId<=0 || $price<0) {
   header('Location: /partner/product_new.php?err=' . urlencode('필수 항목을 확인하세요.')); exit;
 }
 
+// 판매 방식 파싱 및 최소 1개 검증
+$allow = payment_parse_post($_POST); // ['normal'=>0|1, 'cod'=>0|1]
+if ((int)$allow['normal'] === 0 && (int)$allow['cod'] === 0) {
+  header('Location: ' . $returnUrl . '?err=' . urlencode('판매 방식을 최소 1개 선택하세요.')); exit;
+}
+
 $pdo->beginTransaction();
 try {
   // 파트너 등록 → 항상 승인 대기 + 판매중으로 올려도 노출은 안 됨(approval_status)
   $ins = $pdo->prepare("
-    INSERT INTO products (name, description, price, seller_id, category_id, detail_image_url, status, `condition`, release_year, approval_status, created_at, updated_at)
-    VALUES (:n,:d,:p,:s,:c,NULL,'on_sale',:cd,:y,'pending',NOW(),NOW())
+    INSERT INTO products (name, description, price, seller_id, category_id, detail_image_url, status, `condition`, release_year,
+                          payment_normal, payment_cod, approval_status, created_at, updated_at)
+    VALUES (:n,:d,:p,:s,:c,NULL,'on_sale',:cd,:y,:pn,:pc,'pending',NOW(),NOW())
   ");
   $ins->execute([
-    ':n'=>$name, ':d'=>$desc, ':p'=>$price, ':s'=>$me['id'], ':c'=>$catId, ':cd'=>$cond, ':y'=>$year
+    ':n'=>$name, ':d'=>$desc, ':p'=>$price, ':s'=>$me['id'], ':c'=>$catId, ':cd'=>$cond, ':y'=>$year,
+    ':pn'=>(int)$allow['normal'], ':pc'=>(int)$allow['cod']
   ]);
   $pid = (int)$pdo->lastInsertId();
 

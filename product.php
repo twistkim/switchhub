@@ -8,6 +8,27 @@ require_once __DIR__ . '/auth/session.php';
 require_once __DIR__ . '/i18n/bootstrap.php';
 require_once __DIR__ . '/lib/db.php';
 
+// 결제방식 배지 렌더러 로드 (없으면 폴백 정의)
+@include_once __DIR__ . '/partials/product_payment_badges.php';
+if (!function_exists('render_payment_badges')) {
+  function render_payment_badges(?array $product): void {
+    if (!$product) return;
+    $badges = [];
+    if ((int)($product['payment_normal'] ?? 0) === 1) $badges[] = '일반판매';
+    if ((int)($product['payment_cod'] ?? 0) === 1)    $badges[] = 'COD';
+    if (!$badges) return;
+    ?>
+    <div class="mt-3 flex flex-wrap gap-2" id="payment-badges">
+      <?php foreach ($badges as $b): ?>
+        <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-xs font-medium">
+          <?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?>
+        </span>
+      <?php endforeach; ?>
+    </div>
+    <?php
+  }
+}
+
  
 
 $id = (int)($_GET['id'] ?? 0);
@@ -109,6 +130,7 @@ include __DIR__ . '/partials/header.php';
           <span class="ml-2 inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700"><?= htmlspecialchars(__('product.approval'), ENT_QUOTES, 'UTF-8') ?>: <?= htmlspecialchars($p['approval_status'], ENT_QUOTES, 'UTF-8') ?></span>
         <?php endif; ?>
       </div>
+      <?php render_payment_badges($p ?? null); ?>
 
       <p class="mt-4 whitespace-pre-wrap text-gray-700"><?= htmlspecialchars($p['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
 

@@ -9,6 +9,7 @@ require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../i18n/bootstrap.php';
 require_once __DIR__ . '/../auth/csrf.php';
 require_once __DIR__ . '/../auth/guard.php';
+require_once __DIR__ . '/../partials/payment_method_badge.php'; // 결제방식 뱃지
 
 require_role('admin');
 
@@ -43,7 +44,7 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
   // 전체 주문 목록 + 핵심 필드
   $sql = "
     SELECT
-      o.id, o.user_id, o.product_id, o.status, o.tracking_number, o.created_at, o.updated_at,
+      o.id, o.user_id, o.product_id, o.status, o.payment_method, o.tracking_number, o.created_at, o.updated_at,
       u.name AS buyer_name, u.email AS buyer_email,
       p.name AS product_name, p.price, p.seller_id,
       s.name AS seller_name, s.email AS seller_email,
@@ -79,6 +80,11 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
             <span class="text-sm inline-flex items-center px-2.5 py-1 rounded-full
               <?= $status==='delivered'?'bg-green-100 text-green-700':($status==='shipping'?'bg-blue-100 text-blue-700':($status==='payment_confirmed'?'bg-yellow-100 text-yellow-700':'bg-gray-100 text-gray-700')) ?>">
               <?= $status_kr ?>
+            </span>
+            <span class="ml-2 align-middle">
+              <?php if (function_exists('render_payment_method_badge')): ?>
+                <?php render_payment_method_badge($o['payment_method'] ?? null); ?>
+              <?php endif; ?>
             </span>
           </div>
           <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
