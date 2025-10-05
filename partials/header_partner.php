@@ -46,9 +46,11 @@ $me = $_SESSION['user'] ?? null;
         <div class="hidden md:flex h-12 items-center gap-4 text-sm">
           <?php $is = fn($k)=> $activeMenu===$k ? 'text-emerald-700 font-semibold' : 'text-gray-700 hover:text-emerald-700'; ?>
           <a href="/partner/index.php" class="<?= $is('partner') ?>">대시보드</a>
+          <a href="/partner/orders.php" class="<?= $is('partner') ?>">주문관리</a>
           <a href="/partner/product_new.php" class="<?= $is('product_new') ?>">상품 등록</a>
           <a href="/partner/index.php#sales" class="<?= $is('sales') ?>">판매 내역</a>
           <a href="/partner/index.php#settlements" class="<?= $is('settlement') ?>">정산 현황</a>
+          
         </div>
       </div>
 
@@ -56,6 +58,7 @@ $me = $_SESSION['user'] ?? null;
       <div id="partnerMobileNav" class="md:hidden hidden border-t">
         <div class="px-4 py-2 space-y-1">
           <a href="/partner/index.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='partner'?'bg-emerald-50 text-emerald-700':'hover:bg-gray-50'?>">대시보드</a>
+          <a href="/partner/orders.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='partner'?'bg-emerald-50 text-emerald-700':'hover:bg-gray-50'?>">주문관리</a>
           <a href="/partner/product_new.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='product_new'?'bg-emerald-50 text-emerald-700':'hover:bg-gray-50'?>">상품 등록</a>
           <a href="/partner/index.php#sales" class="block px-3 py-2 rounded-md <?= $activeMenu==='sales'?'bg-emerald-50 text-emerald-700':'hover:bg-gray-50'?>">판매 내역</a>
           <a href="/partner/index.php#settlement" class="block px-3 py-2 rounded-md <?= $activeMenu==='settlements'?'bg-emerald-50 text-emerald-700':'hover:bg-gray-50'?>">정산 현황</a>
