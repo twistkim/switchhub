@@ -148,17 +148,32 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
   </section>
 <?php elseif ($tab === 'products'): ?>
   <?php
-  // 전체 상품 목록 (최대 300, is_deleted=0만)
-  $products = $pdo->query("
-    SELECT p.id, p.name, p.price, p.status, p.approval_status, p.created_at, p.seller_id,
+  // 표시 필터: visible(기본) | deleted(숨김된 것)
+  $show = $_GET['show'] ?? 'visible';
+  $show = in_array($show, ['visible','deleted'], true) ? $show : 'visible';
+  ?>
+
+  <section class="mb-4">
+    <div class="flex flex-wrap gap-2">
+      <a href="/admin/index.php?tab=products&show=visible" class="px-3 py-1.5 rounded border <?= $show==='visible' ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-50' ?>">보이는 상품</a>
+      <a href="/admin/index.php?tab=products&show=deleted" class="px-3 py-1.5 rounded border <?= $show==='deleted' ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-50' ?>">숨김(삭제) 상품</a>
+    </div>
+  </section>
+
+  <?php
+  $flag = ($show === 'deleted') ? 1 : 0;
+  $st = $pdo->prepare("
+    SELECT p.id, p.name, p.price, p.status, p.approval_status, p.created_at, p.seller_id, p.is_deleted,
            u.name AS seller_name, u.email AS seller_email,
            (SELECT pi.image_url FROM product_images pi WHERE pi.product_id=p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS primary_image_url
-    FROM products p
-    JOIN users u ON u.id = p.seller_id
-    WHERE p.is_deleted = 0
-    ORDER BY p.created_at DESC
-    LIMIT 300
-  ")->fetchAll();
+      FROM products p
+      JOIN users u ON u.id = p.seller_id
+     WHERE p.is_deleted = :flag
+     ORDER BY p.created_at DESC
+     LIMIT 300
+  ");
+  $st->execute([':flag' => $flag]);
+  $products = $st->fetchAll();
   ?>
   <section class="space-y-4">
     <?php if (empty($products)): ?>
@@ -189,12 +204,24 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
             <div class="mt-3 flex items-center gap-2">
               <a href="/product.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded-md border">상세</a>
               <a href="/admin/product_edit.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded-md border">수정</a>
-              <form method="post" action="/admin/product_delete.php" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
-                <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-                <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
-                <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
-                <button class="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white">삭제(숨김)</button>
-              </form>
+
+              <?php if ((int)($p['is_deleted'] ?? 0) === 0): ?>
+                <!-- 숨김 처리 -->
+                <form method="post" action="/admin/product_delete.php" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
+                  <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                  <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
+                  <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
+                  <button class="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white">삭제(숨김)</button>
+                </form>
+              <?php else: ?>
+                <!-- 복원 처리 -->
+                <form method="post" action="/admin/product_restore.php" onsubmit="return confirm('이 상품을 복원(is_deleted=0) 하시겠습니까?');">
+                  <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                  <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
+                  <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
+                  <button class="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white">복원</button>
+                </form>
+              <?php endif; ?>
             </div>
           </div>
         </div>
