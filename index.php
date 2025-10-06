@@ -59,11 +59,30 @@ if (!function_exists('fix_img_src')) {
 // === webp 표시 + jpg 폴백 인라인 헬퍼 ===
 if (!function_exists('img_with_webp_fallback')) {
   function img_with_webp_fallback(string $src, string $alt = '', string $class = 'w-full h-56 object-cover'): void {
+    // 1) 경로 보정
+    $fixed = fix_img_src($src);
+
+    // 2) serve_img 엔드포인트 사용 조건
+    //   - .webp 확장자이거나
+    //   - /uploads/ 아래 자산(운영상 업로드 자산은 동적 폴백을 거치도록 일괄 처리)
+    $useServe = false;
+    if (preg_match('/\.webp(\?|$)/i', $fixed)) {
+      $useServe = true;
+    } elseif (str_starts_with($fixed, '/uploads/')) {
+      $useServe = true;
+    }
+
+    // 3) 최종 src 결정
+    $finalSrc = $useServe
+      ? ('/tools/serve_img.php?src=' . rawurlencode($fixed))
+      : $fixed;
+
+    // 4) 출력 (에러 시 플레이스홀더 폴백)
     $altEsc = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
-    $srcEsc = htmlspecialchars($src, ENT_QUOTES, 'UTF-8');
-    // 단순 렌더로 문제 원인(경로/리라이트/CSS) 먼저 분리
-    echo '<img src="' . $srcEsc . '" alt="' . $altEsc . '" class="' . $class . '" loading="lazy"'
-       . ' onerror="this.onerror=null;this.src=\'/assets/placeholder.jpg\';"'
+    $srcEsc = htmlspecialchars($finalSrc, ENT_QUOTES, 'UTF-8');
+    $classEsc = htmlspecialchars($class, ENT_QUOTES, 'UTF-8');
+    echo '<img src="' . $srcEsc . '" alt="' . $altEsc . '" class="' . $classEsc . '" loading="lazy" decoding="async"'
+       . ' onerror="this.onerror=null;this.src=\'/assets/placeholder.jpg\';"' 
        . '>';
   }
 }
@@ -119,48 +138,7 @@ include __DIR__ . '/partials/header.php';
 
 
 
-<!-- 헤드라인 & 검색 -->
-<section class="text-center mb-10">
-  <h1 class="text-3xl sm:text-4xl font-extrabold"><?= __('home.headline') ?></h1>
-  <p class="mt-3 text-gray-600"><?= __('home.subhead') ?></p>
-
-  <!-- 검색폼 -->
-  <form id="searchForm" method="get" action="/index.php" class="mt-6 max-w-2xl mx-auto">
-    <div class="flex items-stretch gap-2">
-      <input
-        type="text"
-        name="q"
-        value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>"
-        placeholder="<?= __('home.search_placeholder') ?>"
-        class="flex-1 px-5 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-      />
-      <?php if ($cat > 0): ?>
-        <input type="hidden" name="cat" value="<?= (int)$cat ?>">
-      <?php endif; ?>
-      <button type="submit" class="px-5 py-3 rounded-full bg-primary text-white font-semibold"><?= __('home.search_button') ?></button>
-    </div>
-  </form>
-</section>
-
-<!-- 카테고리 필터 -->
-<section class="mb-6">
-  <div class="flex flex-wrap gap-2 justify-center">
-    <?php
-      $link = '/index.php';
-      $isAll = ($cat === 0);
-    ?>
-    <a href="<?= $link ?>" class="px-4 py-2 rounded-full border <?= $isAll ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-50' ?>">전체</a>
-    <?php foreach ($categories as $c): 
-      $isActive = ($cat === (int)$c['id']);
-      $qs = http_build_query(array_filter(['q'=>$q, 'cat'=>(int)$c['id']], fn($v)=>$v!=='' && $v!==0));
-    ?>
-      <a href="/index.php?<?= $qs ?>"
-         class="px-4 py-2 rounded-full border <?= $isActive ? 'bg-primary text-white border-primary' : 'bg-white hover:bg-gray-50' ?>">
-        <?= htmlspecialchars($c['name'], ENT_QUOTES, 'UTF-8') ?>
-      </a>
-    <?php endforeach; ?>
-  </div>
-</section>
+<?php require __DIR__ . '/partials/search_section.php'; ?>
 
 <!-- 상품 그리드 -->
 <section>

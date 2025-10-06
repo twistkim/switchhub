@@ -10,7 +10,19 @@ require_once __DIR__ . '/../partials/product_payment_methods_field.php';
 require_role('partner');
 
 $pdo = db();
-$cats = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
+$cats = $pdo->query("SELECT id, name, parent_id FROM categories WHERE is_active=1 ORDER BY COALESCE(parent_id,0), sort_order, name")->fetchAll();
+// Build parent/child lists for two-level select
+$parents = [];
+$children = [];
+foreach ($cats as $c) {
+  if (empty($c['parent_id'])) {
+    $parents[] = ['id'=>(int)$c['id'], 'name'=>$c['name']];
+  } else {
+    $pid = (int)$c['parent_id'];
+    if (!isset($children[$pid])) $children[$pid] = [];
+    $children[$pid][] = ['id'=>(int)$c['id'], 'name'=>$c['name']];
+  }
+}
 
 include __DIR__ . '/../partials/header_partner.php';
 ?>
@@ -26,12 +38,22 @@ include __DIR__ . '/../partials/header_partner.php';
         <label class="block text-sm font-medium">상품명</label>
         <input name="name" required class="mt-1 w-full border rounded px-3 py-2">
       </div>
+    </div>
+
+    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium">카테고리</label>
-        <select name="category_id" required class="mt-1 w-full border rounded px-3 py-2">
-          <?php foreach ($cats as $c): ?>
-            <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name'], ENT_QUOTES, 'UTF-8') ?></option>
+        <label class="block text-sm font-medium">1차 카테고리</label>
+        <select id="parent_category_id" class="mt-1 w-full border rounded px-3 py-2" required>
+          <option value="">선택</option>
+          <?php foreach ($parents as $p): ?>
+            <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></option>
           <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">2차 카테고리</label>
+        <select name="category_id" id="child_category_id" class="mt-1 w-full border rounded px-3 py-2" required disabled>
+          <option value="">먼저 1차를 선택하세요</option>
         </select>
       </div>
     </div>
@@ -83,6 +105,39 @@ include __DIR__ . '/../partials/header_partner.php';
       <button type="submit" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold">등록 요청</button>
       <a href="/partner/index.php" class="px-5 py-2.5 border rounded-lg">취소</a>
     </div>
+  <script>
+  (function(){
+    const childrenMap = <?= json_encode($children, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+    const $parent = document.getElementById('parent_category_id');
+    const $child  = document.getElementById('child_category_id');
+    function fillChildren(pid){
+      const list = childrenMap[pid] || [];
+      $child.innerHTML = '';
+      if (!pid || list.length === 0) {
+        $child.innerHTML = '<option value="">하위 없음</option>';
+        $child.disabled = true;
+        $child.required = false;
+        return;
+      }
+      $child.disabled = false;
+      $child.required = true;
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent = '선택';
+      $child.appendChild(opt0);
+      list.forEach(function(it){
+        const o = document.createElement('option');
+        o.value = it.id;
+        o.textContent = it.name;
+        $child.appendChild(o);
+      });
+    }
+    if ($parent) {
+      $parent.addEventListener('change', function(){ fillChildren(this.value); });
+      fillChildren($parent.value);
+    }
+  })();
+  </script>
   </form>
 </div>
 <?php include __DIR__ . '/../partials/footer.php'; ?>
