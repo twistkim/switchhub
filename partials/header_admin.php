@@ -61,6 +61,8 @@ $me = $_SESSION['user'] ?? null;
           <a href="/admin/partners.php" class="<?= $is('partners') ?>">파트너 관리</a>
           <a href="/admin/products_pending.php" class="<?= $is('products_pending') ?>">상품 승인</a>
           <a href="/admin/product_new.php" class="<?= $is('product_new') ?>">상품 등록</a>
+          <!-- /partials/header_admin.php 내 관리자 메뉴 영역에 -->
+          <a href="/admin/categories.php" class="text-gray-700 hover:text-primary">카테고리</a>
         </div>
       </div>
 
@@ -73,6 +75,9 @@ $me = $_SESSION['user'] ?? null;
           <a href="/admin/partners.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='partners'?'bg-primary-50 text-primary':'hover:bg-gray-50'?>">파트너 관리</a>
           <a href="/admin/products_pending.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='products_pending'?'bg-primary-50 text-primary':'hover:bg-gray-50'?>">상품 승인</a>
           <a href="/admin/product_new.php" class="block px-3 py-2 rounded-md <?= $activeMenu==='product_new'?'bg-primary-50 text-primary':'hover:bg-gray-50'?>">상품 등록</a>
+          <!-- /partials/header_admin.php 내 관리자 메뉴 영역에 -->
+          <a href="/admin/categories.php" class="text-gray-700 hover:text-primary">카테고리</a>
+          
           <div class="pt-2 mt-2 border-t">
             <?php if ($me): ?>
               <div class="px-3 py-2 text-sm text-gray-600"><?= htmlspecialchars($me['name'] ?? '', ENT_QUOTES, 'UTF-8') ?> (관리자)</div>
