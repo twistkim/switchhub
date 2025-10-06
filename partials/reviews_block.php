@@ -30,8 +30,30 @@ if ($pid > 0) {
   if (isset($_GET['debug'])) {
     error_log("DBG reviews_block · stats=" . json_encode($stats) . " · items_count=" . count($items));
   }
-} else {
+}
+else {
   $why = 'no_product_id';
+}
+
+// === Attach images to each review (bulk) ===
+if (!empty($items) && is_array($items)) {
+  $ids = array_column($items, 'id');
+  if (!empty($ids)) {
+    $ph = implode(',', array_fill(0, count($ids), '?'));
+    $stImg = $pdo->prepare("SELECT review_id, image_url, width, height FROM review_images WHERE review_id IN ($ph) ORDER BY id ASC");
+    $stImg->execute($ids);
+    $by = [];
+    foreach ($stImg->fetchAll(PDO::FETCH_ASSOC) as $row) {
+      $rid = (int)$row['review_id'];
+      if (!isset($by[$rid])) $by[$rid] = [];
+      $by[$rid][] = $row;
+    }
+    foreach ($items as &$it) {
+      $rid = (int)($it['id'] ?? 0);
+      $it['images'] = $by[$rid] ?? [];
+    }
+    unset($it);
+  }
 }
 
 // 권한 판정
@@ -81,7 +103,7 @@ if (isset($_GET['debug']) && $_GET['debug']=='1') {
 
   <?php if ($canRenderForm): ?>
     <div class="bg-white border rounded-lg p-4 mb-6">
-      <form method="post" action="<?= htmlspecialchars(lang_url('/reviews/save.php'), ENT_QUOTES, 'UTF-8') ?>">
+      <form method="post" action="<?= htmlspecialchars(lang_url('/reviews/save.php'), ENT_QUOTES, 'UTF-8') ?>" enctype="multipart/form-data">
         <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
         <input type="hidden" name="product_id" value="<?= (int)$pid ?>">
         <input type="hidden" name="order_id" value="<?= (int)($can['order_id'] ?? 0) ?>">
@@ -102,6 +124,46 @@ if (isset($_GET['debug']) && $_GET['debug']=='1') {
 
         <textarea name="body" rows="3" class="w-full border rounded p-3"
           placeholder="<?= htmlspecialchars(__('product.review_placeholder') ?: '구매 후기를 남겨주세요.', ENT_QUOTES, 'UTF-8') ?>"><?= $mine ? htmlspecialchars($mine['body'], ENT_QUOTES, 'UTF-8') : '' ?></textarea>
+
+        <!-- 리뷰 이미지 업로드 -->
+        <div class="mt-3">
+          <label class="block text-sm font-medium">리뷰 사진 (최대 5장)</label>
+          <input
+            id="review-photos-input"
+            type="file"
+            name="photos[]"
+            accept="image/*"
+            multiple
+            class="mt-1 w-full border rounded px-3 py-2"
+          />
+          <p class="mt-1 text-xs text-gray-500">JPG/PNG/WebP, 파일당 최대 5MB · 최대 5장</p>
+
+          <!-- (선택) 미리보기 -->
+          <div id="review-photos-preview" class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+        </div>
+
+        <script>
+          (function(){
+            const input = document.getElementById('review-photos-input');
+            const preview = document.getElementById('review-photos-preview');
+            if (!input || !preview) return;
+
+            input.addEventListener('change', function(){
+              preview.innerHTML = '';
+              const files = Array.from(this.files || []);
+              files.slice(0, 5).forEach(function(file){
+                if (!file.type || !file.type.startsWith('image/')) return;
+                const url = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'preview';
+                img.loading = 'lazy';
+                img.className = 'w-full aspect-square object-cover rounded border';
+                preview.appendChild(img);
+              });
+            });
+          })();
+        </script>
 
         <div class="mt-3 flex justify-end">
             <?php
@@ -136,9 +198,24 @@ if (isset($_GET['debug']) && $_GET['debug']=='1') {
           <div class="font-semibold"><?= htmlspecialchars($r['user_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?></div>
           <div class="text-sm text-yellow-600"><?= str_repeat('★', (int)$r['rating']) . str_repeat('☆', 5-(int)$r['rating']) ?></div>
         </div>
+
         <?php if (!empty($r['body'])): ?>
           <div class="mt-2 text-sm text-gray-800" style="white-space:pre-line"><?= htmlspecialchars($r['body'], ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
+
+        <?php if (!empty($r['images'])): ?>
+          <div class="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <?php foreach ($r['images'] as $img): ?>
+              <?php $url = (string)($img['image_url'] ?? ''); if ($url !== '' && $url[0] !== '/') { $url = '/' . $url; } ?>
+              <?php if ($url !== ''): ?>
+                <a href="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="block">
+                  <img src="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" alt="review image" class="w-full aspect-square object-cover rounded border" loading="lazy">
+                </a>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+
         <div class="mt-2 text-xs text-gray-500"><?= htmlspecialchars($r['created_at'], ENT_QUOTES, 'UTF-8') ?></div>
       </div>
     <?php endforeach; endif; ?>
