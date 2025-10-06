@@ -65,7 +65,7 @@ include __DIR__ . '/../partials/header_partner.php';
     <a href="#products" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">내 상품</a>
     <a href="#orders" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">판매 내역</a>
     <a href="#settlements" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">정산 현황</a>
-    <a href="/partner/product_new.php" class="px-3 py-1.5 rounded bg-primary text-white">새 상품 등록</a>
+    <a href="<?= htmlspecialchars(lang_url('/partner/product_new.php'), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded bg-primary text-white">새 상품 등록</a>
   </div>
 </section>
 
@@ -290,9 +290,9 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
             <div class="font-semibold truncate">#<?= (int)$p['id'] ?> · <?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></div>
             <div class="text-sm text-gray-500 mt-1"><?= number_format((float)$p['price']) ?> THB</div>
             <div class="mt-3 flex items-center gap-2">
-              <a href="/product.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded border">상세</a>
-              <a href="/partner/product_edit.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded border">수정</a>
-              <form method="post" action="/partner/product_delete.php" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
+              <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상세</a>
+              <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">수정</a>
+              <form method="post" action="<?= htmlspecialchars(lang_url('/partner/product_delete.php'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
                 <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                 <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
                 <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
@@ -351,6 +351,15 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
               결제방식:
               <?php if (function_exists('render_payment_method_badge')) render_payment_method_badge($r['payment_method'] ?? null); ?>
             </div>
+            <?php
+              // 제품이 실제로 존재(소프트 삭제 아닌 표시용 이름이 아닌지)하면 빠른 이동 버튼 제공
+              $can_edit_product = !empty($r['product_id']) && !str_starts_with((string)$productName, '삭제된 상품');
+              if ($can_edit_product): ?>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상품 보기</a>
+                  <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상품 수정</a>
+                </div>
+            <?php endif; ?>
 
             <?php if ($can_ship): ?>
               <form method="post" action="/partner/order_action.php" class="mt-3 flex flex-wrap items-center gap-2" onsubmit="return confirm('송장을 저장하고 상태를 배송중으로 변경할까요?');">

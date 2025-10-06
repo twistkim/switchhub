@@ -56,21 +56,11 @@ include __DIR__ . '/../partials/header_partner.php';
         </select>
       </div>
     </div>
-    <div>
-      <form method="post" action="/partner/product_save.php" enctype="multipart/form-data" class="space-y-4">
-        <!-- 기존: 상품명/설명/가격/카테고리/이미지 등 입력 필드 -->
-
-        <?php
-          // ✅ 판매 방식 체크박스 표시 (신규/수정 모두 대응)
-          // $product가 수정폼에서 세팅되어 있다면 그 값으로 프리체크 됩니다.
-          render_payment_methods_field($product ?? null);
-        ?>
-
-        <!-- 기존: 제출 버튼 영역 -->
-        <div class="pt-2">
-          <button type="submit" class="px-4 py-2 rounded bg-primary text-white">등록 요청</button>
-        </div>
-      </form>
+    <div class="space-y-4">
+      <?php
+        // 결제 방식 체크박스 (단일 폼 안에서 함께 전송)
+        render_payment_methods_field($product ?? null);
+      ?>
     </div>
     
     <div>
@@ -88,8 +78,9 @@ include __DIR__ . '/../partials/header_partner.php';
       <input type="file" name="detail_image" accept="image/*" class="mt-1 w-full border rounded px-3 py-2">
     </div>
 
+    
     <div class="pt-4 flex gap-3">
-      <button class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold">등록 요청</button>
+      <button type="submit" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold">등록 요청</button>
       <a href="/partner/index.php" class="px-5 py-2.5 border rounded-lg">취소</a>
     </div>
   </form>

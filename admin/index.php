@@ -124,6 +124,9 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
               </form>
             <?php endif; ?>
 
+            <!-- 상품 수정 (관리자) -->
+            <a href="/admin/product_edit.php?id=<?= (int)$o['product_id'] ?>" class="px-3 py-1.5 rounded-md border text-sm">상품 수정</a>
+
             <!-- 상품 삭제 (관리자) -->
             <form method="post" action="/admin/product_delete.php"
                   onsubmit="return confirm('이 상품을 삭제할까요? 이미지도 함께 삭제됩니다.\n※ 이미 주문이 있는 상품은 삭제할 수 없습니다.');">
@@ -185,6 +188,7 @@ if (isset($_GET['msg']) || isset($_GET['err'])): ?>
             <div class="text-xs text-gray-500 mt-1">판매자: <?= htmlspecialchars($p['seller_name'].' ('.$p['seller_email'].')', ENT_QUOTES, 'UTF-8') ?></div>
             <div class="mt-3 flex items-center gap-2">
               <a href="/product.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded-md border">상세</a>
+              <a href="/admin/product_edit.php?id=<?= (int)$p['id'] ?>" class="px-3 py-1.5 rounded-md border">수정</a>
               <form method="post" action="/admin/product_delete.php" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
                 <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                 <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
