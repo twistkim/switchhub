@@ -14,16 +14,22 @@ $pdo = db();
 $cats = $pdo->query("SELECT id, name, parent_id FROM categories WHERE is_active=1 ORDER BY COALESCE(parent_id,0), sort_order, name")->fetchAll();
 $partners = $pdo->query("SELECT id, name, email FROM users WHERE role IN ('partner','admin') AND is_active=1 ORDER BY role DESC, name")->fetchAll();
 
-// Build parent -> children map for two-level select
+// Build maps for 3-level select: parents (level-1) and byParent (id -> its direct children)
 $parents = [];
-$children = [];
+$byParent = [];
 foreach ($cats as $c) {
-  if (empty($c['parent_id'])) {
-    $parents[] = ['id'=>(int)$c['id'], 'name'=>$c['name']];
-  } else {
-    $pid = (int)$c['parent_id'];
-    if (!isset($children[$pid])) $children[$pid] = [];
-    $children[$pid][] = ['id'=>(int)$c['id'], 'name'=>$c['name']];
+  $id  = (int)$c['id'];
+  $pid = isset($c['parent_id']) ? (int)$c['parent_id'] : 0;
+  if ($pid === 0) {
+    $parents[] = ['id'=>$id, 'name'=>$c['name']];
+  }
+  if (!isset($byParent[$pid])) $byParent[$pid] = [];
+  if ($pid !== 0) {
+    if (!isset($byParent[$pid])) $byParent[$pid] = [];
+  }
+  if (!isset($byParent[$id])) $byParent[$id] = $byParent[$id] ?? [];
+  if ($pid !== 0) {
+    $byParent[$pid][] = ['id'=>$id, 'name'=>$c['name']];
   }
 }
 
@@ -41,23 +47,31 @@ include __DIR__ . '/../partials/header_admin.php';
       </div>
     </div>
 
-      <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium">1차 카테고리</label>
-          <select id="parent_category_id" class="mt-1 w-full border rounded px-3 py-2" required>
-            <option value="">선택</option>
-            <?php foreach ($parents as $p): ?>
-              <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium">2차 카테고리</label>
-          <select name="category_id" id="child_category_id" class="mt-1 w-full border rounded px-3 py-2" required disabled>
-            <option value="">먼저 1차를 선택하세요</option>
-          </select>
-        </div>
+    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium">1차 카테고리</label>
+        <select id="parent_category_id" class="mt-1 w-full border rounded px-3 py-2" required>
+          <option value="">선택</option>
+          <?php foreach ($parents as $p): ?>
+            <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></option>
+          <?php endforeach; ?>
+        </select>
       </div>
+      <div>
+        <label class="block text-sm font-medium">2차 카테고리</label>
+        <select id="child_category_id" class="mt-1 w-full border rounded px-3 py-2" disabled>
+          <option value="">먼저 1차를 선택하세요</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">3차 카테고리</label>
+        <select id="grand_category_id" class="mt-1 w-full border rounded px-3 py-2" disabled>
+          <option value="">먼저 2차를 선택하세요</option>
+        </select>
+      </div>
+      <!-- 최종 제출용 hidden: 가장 깊게 선택된 id를 저장 -->
+      <input type="hidden" name="category_id" id="final_category_id" value="">
+    </div>
 
     <div>
       <label class="block text-sm font-medium">판매자(파트너/관리자)</label>
@@ -136,34 +150,83 @@ include __DIR__ . '/../partials/header_admin.php';
     </div>
     <script>
       (function(){
-        const childrenMap = <?= json_encode($children, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
-        const $parent = document.getElementById('parent_category_id');
-        const $child  = document.getElementById('child_category_id');
-        function fillChildren(pid){
-          const list = childrenMap[pid] || [];
-          $child.innerHTML = '';
-          if (!pid || list.length === 0) {
-            $child.innerHTML = '<option value="">하위 없음</option>';
-            $child.disabled = true;
-            $child.required = false; // 하위가 없으면 선택 불필요
+        // PHP에서 내려준: 부모id -> 직계 children 배열 (id, name)
+        const allMap = <?= json_encode($byParent, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+        const $p = document.getElementById('parent_category_id');
+        const $c = document.getElementById('child_category_id');
+        const $g = document.getElementById('grand_category_id');
+        const $final = document.getElementById('final_category_id');
+
+        function setFinalCategory() {
+          // 가장 깊은 선택값을 hidden에 저장
+          if ($g.value) {
+            $final.value = $g.value;
+          } else if ($c.value) {
+            $final.value = $c.value;
+          } else if ($p.value) {
+            $final.value = $p.value;
+          } else {
+            $final.value = '';
+          }
+        }
+
+        function fillSelect($sel, list, placeholder) {
+          $sel.innerHTML = '';
+          if (!list || list.length === 0) {
+            $sel.innerHTML = `<option value="">${placeholder}</option>`;
+            $sel.disabled = true;
             return;
           }
-          $child.disabled = false;
-          $child.required = true;
+          $sel.disabled = false;
           const opt0 = document.createElement('option');
           opt0.value = '';
           opt0.textContent = '선택';
-          $child.appendChild(opt0);
-          list.forEach(function(it){
+          $sel.appendChild(opt0);
+          list.forEach(it => {
             const o = document.createElement('option');
             o.value = it.id;
             o.textContent = it.name;
-            $child.appendChild(o);
+            $sel.appendChild(o);
           });
         }
-        $parent.addEventListener('change', function(){ fillChildren(this.value); });
+
+        function onParentChange() {
+          const pid = parseInt($p.value || '0', 10);
+          const lv2 = allMap[pid] || [];
+          fillSelect($c, lv2, '하위 없음');
+          // 2차가 하나뿐이면 자동 선택
+          if (lv2.length === 1) {
+            $c.value = String(lv2[0].id);
+          } else {
+            $c.value = '';
+          }
+          onChildChange();
+          setFinalCategory();
+        }
+
+        function onChildChange() {
+          const cid = parseInt($c.value || '0', 10);
+          const lv3 = allMap[cid] || [];
+          fillSelect($g, lv3, '하위 없음');
+          // 3차가 하나뿐이면 자동 선택
+          if (lv3.length === 1) {
+            $g.value = String(lv3[0].id);
+          } else {
+            $g.value = '';
+          }
+          setFinalCategory();
+        }
+
+        function onGrandChange() {
+          setFinalCategory();
+        }
+
+        $p.addEventListener('change', onParentChange);
+        $c.addEventListener('change', onChildChange);
+        $g.addEventListener('change', onGrandChange);
+
         // 초기화(새로고침 대비)
-        fillChildren($parent.value);
+        onParentChange();
       })();
     </script>
   </form>

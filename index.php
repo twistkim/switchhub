@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/auth/session.php';      // 있으면
 require_once __DIR__ . '/i18n/bootstrap.php';
+require_once __DIR__ . '/partials/splash_logo.php';
 
 // 결제방식 배지 렌더러 로드 (partial 우선, 없으면 폴백)
 @include_once __DIR__ . '/partials/product_payment_badges.php';
@@ -92,9 +93,62 @@ if (!function_exists('img_with_webp_fallback')) {
 $q   = isset($_GET['q'])   ? trim($_GET['q'])   : '';
 $cat = isset($_GET['cat']) ? (int)$_GET['cat']  : 0;
 
-// 카테고리 조회
+// 카테고리 조회 (강화판): parent_id 포함 + 컬럼/데이터 상황에 따른 폴백
 $pdo = db();
-$categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
+$categories = [];
+
+function load_categories_strong(PDO $pdo): array {
+  // 1) 기본 쿼리: is_deleted 지원 + parent_id 정규화
+  try {
+    $q1 = "SELECT id, name, IFNULL(parent_id, 0) AS parent_id
+             FROM categories
+            WHERE (is_deleted IS NULL OR is_deleted = 0)
+            ORDER BY COALESCE(parent_id, 0), name";
+    $rows = $pdo->query($q1)->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($rows)) return $rows;
+  } catch (Throwable $e) {
+    error_log('CATS q1 fail: ' . $e->getMessage());
+  }
+
+  // 2) 폴백: is_deleted 없는 스키마
+  try {
+    $q2 = "SELECT id, name, IFNULL(parent_id, 0) AS parent_id
+             FROM categories
+            ORDER BY COALESCE(parent_id, 0), name";
+    $rows = $pdo->query($q2)->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($rows)) return $rows;
+  } catch (Throwable $e) {
+    error_log('CATS q2 fail: ' . $e->getMessage());
+  }
+
+  // 3) 폴백: parent_id 컬럼명이 다른 경우 (SHOW COLUMNS로 탐색)
+  try {
+    $cols = $pdo->query('SHOW COLUMNS FROM categories')->fetchAll(PDO::FETCH_ASSOC);
+    $names = array_map(fn($c) => strtolower((string)($c['Field'] ?? '')), $cols);
+    $parentKeys = ['parent_id','parent','pid','p_id','parent_category_id','parentcategoryid','parentcategory','parentid'];
+    $parentKey = null;
+    foreach ($parentKeys as $pk) {
+      if (in_array($pk, $names, true)) { $parentKey = $pk; break; }
+    }
+    if ($parentKey === null) {
+      // parent 키가 없으면 전부 루트 취급하되 최소 셀렉터가 동작하도록 반환
+      $rows = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+      foreach ($rows as &$r) { $r['parent_id'] = 0; }
+      return $rows;
+    }
+
+    // 부모키를 찾아서 별칭 parent_id로 정규화
+    $q3 = "SELECT id, name, IFNULL(`{$parentKey}`, 0) AS parent_id FROM categories ORDER BY COALESCE(`{$parentKey}`,0), name";
+    $rows = $pdo->query($q3)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    return $rows;
+  } catch (Throwable $e) {
+    error_log('CATS q3 fail: ' . $e->getMessage());
+  }
+
+  return [];
+}
+
+$categories = load_categories_strong($pdo);
 
 // 상품 조회: 판매중(on_sale)만
 $sql = "

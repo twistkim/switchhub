@@ -37,8 +37,9 @@ $curClean = i18n_current_path_clean(); // 현재 경로에서 언어 프리픽�
       <div class="flex items-center justify-between h-16">
         <!-- 로고 -->
         <a href="<?= htmlspecialchars(lang_url('/index.php'), ENT_QUOTES, 'UTF-8') ?>" class="flex items-center gap-2">
-          <span class="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-primary-100">📱</span>
-          <span class="text-xl font-extrabold">폰스위치허브</span>
+          <span class="text-xl font-extrabold">
+            <img src="./img/logo.svg">
+          </span>
         </a>
 
         <!-- 데스크탑 메뉴 -->
@@ -56,7 +57,7 @@ $curClean = i18n_current_path_clean(); // 현재 경로에서 언어 프리픽�
 
           <?php if ($me): ?>
             <?php if ($role === 'admin'): ?>
-              <a href="<?= htmlspecialchars(lang_url('/admin/index.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.admin') ?: 'Admin' ?></a>
+              <a href="<?= htmlspecialchars(lang_url('/admin/index.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.admin') ?: 'admin' ?></a>
             <?php endif; ?>
 
             <a href="<?= htmlspecialchars(lang_url('/my.php'), ENT_QUOTES, 'UTF-8') ?>" class="text-gray-700 hover:text-primary"><?= __('nav.mypage') ?: 'My Page' ?></a>
