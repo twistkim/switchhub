@@ -17,7 +17,23 @@ if ($appId <= 0) { header('Location: /admin/partners.php?err=bad_id'); exit; }
 
 
 $pdo = db();
-$appStmt = $pdo->prepare("SELECT id, email FROM partner_applications WHERE id=:id");
+// 확장된 컬럼 포함
+$appStmt = $pdo->prepare("
+  SELECT
+    id,
+    email,
+    business_name,
+    name,
+    contact_phone,
+    store_address,
+    business_address,
+    store_lat,
+    store_lng,
+    store_place_id,
+    hero_image_url
+  FROM partner_applications
+  WHERE id = :id
+");
 $appStmt->execute([':id'=>$appId]);
 $app = $appStmt->fetch(PDO::FETCH_ASSOC);
 if (!$app) { header('Location: /admin/partners.php?err=not_found'); exit; }
@@ -34,19 +50,62 @@ try {
     $up = $pdo->prepare("UPDATE users SET role='partner', updated_at=NOW() WHERE email=:email AND role <> 'admin'");
     $up->execute([':email' => $app['email']]);
 
-    // 3) partner_profiles 자동 생성 또는 업데이트 (승인 시 공개)
-    $ins = $pdo->prepare("
-      INSERT INTO partner_profiles (user_id, store_name, is_published, created_at, updated_at)
-      SELECT u.id, COALESCE(pa.business_name, pa.name, u.name), 1, NOW(), NOW()
-      FROM users u
-      JOIN partner_applications pa ON pa.email = u.email
-      WHERE pa.id = :appid
-      ON DUPLICATE KEY UPDATE
-        store_name = VALUES(store_name),
-        is_published = 1,
-        updated_at = NOW()
-    ");
-    $ins->execute([':appid' => $appId]);
+    // 3) partner_profiles 자동 생성/갱신(승인 시 공개) — email로 users.id 매핑
+    $uid = null;
+    $uStmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
+    $uStmt->execute([':email' => $app['email']]);
+    $uid = ($row = $uStmt->fetch(PDO::FETCH_ASSOC)) ? (int)$row['id'] : null;
+
+    if ($uid) {
+      // 소스에서 안전하게 값 정리
+      $storeName = ($app['business_name'] ?? '') !== '' ? $app['business_name'] : ($app['name'] ?? null);
+      $intro     = null; // intro 컬럼이 없다면 비워둠 (추후 확장)
+      $phone     = $app['contact_phone']     ?? null;
+      $addr1     = ($app['store_address']    ?? '') !== '' ? $app['store_address'] : ($app['business_address'] ?? null);
+      $latRaw    = $app['store_lat']         ?? null;
+      $lngRaw    = $app['store_lng']         ?? null;
+      $lat       = is_numeric($latRaw) ? (float)$latRaw : null;
+      $lng       = is_numeric($lngRaw) ? (float)$lngRaw : null;
+      $placeId   = $app['store_place_id']    ?? null;
+      $hero      = $app['hero_image_url']    ?? null;
+
+      // store_name이 비어있으면 사용자 이름으로 백업
+      if (!$storeName) {
+        $unameStmt = $pdo->prepare("SELECT name FROM users WHERE id=:uid");
+        $unameStmt->execute([':uid' => $uid]);
+        $uname = $unameStmt->fetchColumn();
+        $storeName = $uname ?: ('Store #' . $uid);
+      }
+
+      $ins = $pdo->prepare("
+        INSERT INTO partner_profiles
+          (user_id, store_name, intro, phone, address_line1, lat, lng, place_id, hero_image_url, is_published, created_at, updated_at)
+        VALUES
+          (:uid, :store_name, :intro, :phone, :addr1, :lat, :lng, :place_id, :hero, 1, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+          store_name     = VALUES(store_name),
+          intro          = VALUES(intro),
+          phone          = VALUES(phone),
+          address_line1  = VALUES(address_line1),
+          lat            = VALUES(lat),
+          lng            = VALUES(lng),
+          place_id       = VALUES(place_id),
+          hero_image_url = VALUES(hero_image_url),
+          is_published   = 1,
+          updated_at     = NOW()
+      ");
+      $ins->execute([
+        ':uid'        => $uid,
+        ':store_name' => $storeName,
+        ':intro'      => $intro,
+        ':phone'      => $phone,
+        ':addr1'      => $addr1,
+        ':lat'        => $lat,
+        ':lng'        => $lng,
+        ':place_id'   => $placeId,
+        ':hero'       => $hero,
+      ]);
+    }
   }
 
   $pdo->commit();
