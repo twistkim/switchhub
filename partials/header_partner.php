@@ -21,6 +21,9 @@ $me = $_SESSION['user'] ?? null;
           <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-extrabold">P</span>
           <span class="hidden sm:inline text-lg font-bold">Partner Console</span>
         </a>
+        <a href="/index.php" class="flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-extrabold">H</span>
+        </a>
       </div>
 
       <div class="hidden md:flex items-center gap-3">

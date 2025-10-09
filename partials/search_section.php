@@ -1,9 +1,19 @@
 <!-- Toggle Search Button -->
-<div class="flex justify-center my-4">
+<div class="flex justify-center my-12">
   <button id="toggleSearchBtn" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow hover:bg-primary/90 active:scale-[0.98] transition">
-    검색하기
+    <!-- SparklesIcon -->
+    <svg xmlns="http://www.w3.org/2000/svg"
+        class="w-6 h-6 text-yellow-500 inline-block"
+        fill="none" viewBox="0 0 28 28" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" 
+            d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M16.95 16.95l1.414 1.414M7.05 7.05L5.636 5.636M12 8l1.176 3.176L16.5 12l-3.324.824L12 16l-.824-3.176L7.5 12l3.676-.824L12 8z" />
+    </svg>
+  
+  원하는 폰 찾아보기
   </button>
 </div>
+<!-- Anchor to allow #search to scroll here -->
+<div id="search" class="sr-only" aria-hidden="true"></div>
 <div id="searchArea" class="hidden transition-all duration-500 ease-in-out overflow-hidden overflow-y-auto max-h-0" style="max-height:0">
 <section class="mb-6">
   <?php
@@ -149,6 +159,8 @@
     </div>
     <input type="hidden" name="pay" id="payHidden" value="<?= in_array($pay, ['normal','cod'], true) ? htmlspecialchars($pay, ENT_QUOTES, 'UTF-8') : '' ?>">
     <input type="hidden" name="cat" id="catHidden" value="<?= (int)$currentCat ?>">
+    <input type="hidden" name="cat_level" id="catLevelHidden" value="0">
+    <input type="hidden" name="cat_mode"  id="catModeHidden"  value="tree">
 
     <!-- 결제 방식 선택 (일반결제 / COD) -->
     <div class="mb-3">
@@ -207,6 +219,9 @@
       </div>
     </div>
 
+    <p class="mt-2 text-xs text-gray-500">
+      상위 카테고리만 선택해도 하위 전체를 검색합니다. (예: 1차만 선택 시 1차의 모든 2·3차 포함)
+    </p>
     <div class="mt-3 sticky bottom-0 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-t pt-3 flex justify-end">
       <button type="submit" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-white font-semibold shadow-md hover:shadow-lg hover:bg-primary/90 active:scale-[0.99] transition">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -226,6 +241,8 @@
       const wrapLv2 = document.getElementById('wrapLv2');
       const wrapLv3 = document.getElementById('wrapLv3');
       const hidden = document.getElementById('catHidden');
+      const catLevelHidden = document.getElementById('catLevelHidden');
+      const catModeHidden  = document.getElementById('catModeHidden'); // reserved (tree search)
       const form = document.getElementById('catForm');
 
       const payNormal = document.getElementById('payNormal');
@@ -251,7 +268,19 @@
         const v1 = parseInt(lv1?.value||'0',10)||0;
         const v2 = (!lv2?.disabled ? (parseInt(lv2.value||'0',10)||0) : 0);
         const v3 = (!lv3?.disabled ? (parseInt(lv3.value||'0',10)||0) : 0);
-        hidden.value = v3>0 ? v3 : (v2>0 ? v2 : (v1>0 ? v1 : 0));
+        if (v3 > 0) {
+          hidden.value = v3;
+          if (catLevelHidden) catLevelHidden.value = 3;
+        } else if (v2 > 0) {
+          hidden.value = v2;
+          if (catLevelHidden) catLevelHidden.value = 2;
+        } else if (v1 > 0) {
+          hidden.value = v1;
+          if (catLevelHidden) catLevelHidden.value = 1;
+        } else {
+          hidden.value = 0;
+          if (catLevelHidden) catLevelHidden.value = 0;
+        }
       }
 
       function syncPay(){
@@ -329,22 +358,52 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const btn = document.getElementById('toggleSearchBtn');
+  const btn  = document.getElementById('toggleSearchBtn');
   const area = document.getElementById('searchArea');
   if (!btn || !area) return;
-  btn.addEventListener('click', function() {
-    const isHidden = area.classList.contains('hidden');
-    if (isHidden) {
-      area.classList.remove('hidden');
-      // 고정 패널 높이로 열기 (내부는 스크롤)
-      requestAnimationFrame(() => {
-        area.style.maxHeight = '65vh';
-      });
-    } else {
-      // 닫기
-      area.style.maxHeight = '0';
-      setTimeout(() => area.classList.add('hidden'), 400);
+
+  // helpers
+  function openPanel() {
+    if (!area.classList.contains('hidden')) return;
+    area.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      area.style.maxHeight = '65vh';
+    });
+    // pressed visual
+    btn.setAttribute('aria-pressed','true');
+    btn.classList.add('ring-2','ring-primary/40');
+  }
+  function closePanel() {
+    area.style.maxHeight = '0';
+    setTimeout(() => area.classList.add('hidden'), 400);
+    btn.removeAttribute('aria-pressed');
+    btn.classList.remove('ring-2','ring-primary/40');
+  }
+  function togglePanel() {
+    if (area.classList.contains('hidden')) openPanel();
+    else closePanel();
+  }
+
+  // click toggle
+  btn.addEventListener('click', togglePanel);
+
+  // --- Auto open cases ---
+  // 1) ?open_search=1  2) #search  3) has any search-related param (?q, ?cat, ?cat_lv1/2/3, ?pay)
+  try {
+    const qp = new URLSearchParams(location.search);
+    const hasOpenFlag = qp.get('open_search') === '1';
+    const hasHash     = (location.hash || '').toLowerCase().includes('search');
+    const hasParams   = ['q','cat','cat_lv1','cat_lv2','cat_lv3','pay'].some(k => qp.has(k) && qp.get(k));
+    if (hasOpenFlag || hasHash || hasParams) {
+      openPanel();
+      // Optionally scroll the anchor into view if hash absent
+      if (!hasHash) {
+        const anchor = document.getElementById('search');
+        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
-  });
+  } catch(e) {
+    console.warn('search auto-open error', e);
+  }
 });
 </script>

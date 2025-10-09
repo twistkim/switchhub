@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/auth/session.php';      // 있으면
 require_once __DIR__ . '/i18n/bootstrap.php';
+require_once __DIR__ . '/lib/category_tree.php';
 require_once __DIR__ . '/partials/splash_logo.php';
 
 // 결제방식 배지 렌더러 로드 (partial 우선, 없으면 폴백)
@@ -93,6 +94,10 @@ if (!function_exists('img_with_webp_fallback')) {
 $q   = isset($_GET['q'])   ? trim($_GET['q'])   : '';
 $cat = isset($_GET['cat']) ? (int)$_GET['cat']  : 0;
 
+// 트리 검색 힌트(상위 선택 시 하위 포함)
+$cat_level = isset($_GET['cat_level']) ? (int)$_GET['cat_level'] : 0;
+$cat_mode  = isset($_GET['cat_mode'])  ? (string)$_GET['cat_mode'] : '';
+
 // 카테고리 조회 (강화판): parent_id 포함 + 컬럼/데이터 상황에 따른 폴백
 $pdo = db();
 $categories = [];
@@ -150,6 +155,17 @@ function load_categories_strong(PDO $pdo): array {
 
 $categories = load_categories_strong($pdo);
 
+// 카테고리 트리 기반으로, 선택 노드 + 모든 하위 포함 id 목록 생성
+$catIds = [];
+if ($cat > 0) {
+  if ($cat_mode === 'tree') {
+    $tree = cat_load_tree($pdo); // ['childrenOf'=>..., 'rowsById'=>...]
+    $catIds = cat_collect_descendants($tree['childrenOf'], $cat); // 자기 자신 포함
+  } else {
+    $catIds = [$cat];
+  }
+}
+
 // 상품 조회: 판매중(on_sale)만
 $sql = "
   SELECT
@@ -168,9 +184,17 @@ $sql = "
 ";
 $params = [];
 
-if ($cat > 0) {
-  $sql .= " AND p.category_id = :cat";
-  $params[':cat'] = $cat;
+if (!empty($catIds)) {
+  $inKeys = [];
+  $catBind = [];
+  foreach ($catIds as $i => $cid) {
+    $k = ':c' . $i;
+    $inKeys[] = $k;
+    $catBind[$k] = (int)$cid;
+  }
+  $sql .= " AND p.category_id IN (" . implode(',', $inKeys) . ")";
+  // 주의: $params는 기존에 :q1, :q2 등 이름 바인딩을 쓰고 있으므로 merge만 하면 됩니다.
+  $params = array_merge($params, $catBind);
 }
 if ($q !== '') {
   $sql .= " AND (p.name LIKE :q1 OR p.description LIKE :q2)";
@@ -189,7 +213,7 @@ include __DIR__ . '/partials/header.php';
 
 
 
-
+<?php require_once __DIR__ . '/partials/promo_banner.php'; ?>
 
 
 <?php require __DIR__ . '/partials/search_section.php'; ?>
