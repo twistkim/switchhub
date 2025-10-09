@@ -1,3 +1,10 @@
+<!-- Toggle Search Button -->
+<div class="flex justify-center my-4">
+  <button id="toggleSearchBtn" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow hover:bg-primary/90 active:scale-[0.98] transition">
+    검색하기
+  </button>
+</div>
+<div id="searchArea" class="hidden transition-all duration-500 ease-in-out overflow-hidden overflow-y-auto max-h-0" style="max-height:0">
 <section class="mb-6">
   <?php
     // $categories: SELECT * FROM categories 결과 배열을 index.php 등에서 넘겨주세요.
@@ -200,7 +207,7 @@
       </div>
     </div>
 
-    <div class="mt-3 flex justify-end">
+    <div class="mt-3 sticky bottom-0 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-t pt-3 flex justify-end">
       <button type="submit" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-white font-semibold shadow-md hover:shadow-lg hover:bg-primary/90 active:scale-[0.99] transition">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <?= function_exists('__') ? __('home.search_button') : '검색' ?>
@@ -319,3 +326,25 @@
     })();
   </script>
 </section>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('toggleSearchBtn');
+  const area = document.getElementById('searchArea');
+  if (!btn || !area) return;
+  btn.addEventListener('click', function() {
+    const isHidden = area.classList.contains('hidden');
+    if (isHidden) {
+      area.classList.remove('hidden');
+      // 고정 패널 높이로 열기 (내부는 스크롤)
+      requestAnimationFrame(() => {
+        area.style.maxHeight = '65vh';
+      });
+    } else {
+      // 닫기
+      area.style.maxHeight = '0';
+      setTimeout(() => area.classList.add('hidden'), 400);
+    }
+  });
+});
+</script>
