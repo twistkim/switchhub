@@ -48,23 +48,61 @@ try {
   $dir = __DIR__ . '/../uploads/products/' . $pid;
   if (!is_dir($dir)) @mkdir($dir, 0775, true);
 
-  // 메인 이미지(최대 5장, 필수)
-  if (!empty($_FILES['main_images']['name'][0])) {
-    $files = $_FILES['main_images'];
-    $count = min(5, count(array_filter($files['name'])));
+  // 메인 이미지(최대 5장, 필수) — 단일/복수 업로드 모두 지원 + 대체 필드명(images) 지원 + 대표 이미지 선택
+  $primaryIndex = isset($_POST['primary_image_index']) ? (int)$_POST['primary_image_index'] : 0;
+  $filesField = null;
+  if (!empty($_FILES['main_images'])) {
+    $filesField = $_FILES['main_images'];
+  } elseif (!empty($_FILES['images'])) { // 호환용
+    $filesField = $_FILES['images'];
+  }
+  
+  if ($filesField) {
+    // 배열/단일 업로드 형태 통일
+    $names  = $filesField['name'];
+    $tmps   = $filesField['tmp_name'];
+    $errors = $filesField['error'];
+    if (!is_array($names)) {
+      $names  = [$names];
+      $tmps   = [$tmps];
+      $errors = [$errors];
+    }
+  
+    // 실제 업로드된 파일만 카운트
+    $validIdx = [];
+    foreach ($names as $i => $nm) {
+      if ($nm !== '' && isset($errors[$i]) && $errors[$i] === UPLOAD_ERR_OK && is_uploaded_file($tmps[$i])) {
+        $validIdx[] = $i;
+      }
+    }
+    if (empty($validIdx)) {
+      throw new Exception('메인 이미지는 1장 이상 업로드해야 합니다.');
+    }
+  
+    $total = min(5, count($validIdx));
     $order = 0;
-    for ($i=0; $i<$count; $i++) {
-      if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
-      $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION) ?: 'jpg';
+    foreach ($validIdx as $k => $i) {
+      if ($order >= $total) break;
+      $ext = pathinfo($names[$i], PATHINFO_EXTENSION) ?: 'jpg';
       $nameOnDisk = 'main_'.$order.'_'.bin2hex(random_bytes(4)).'.'.strtolower($ext);
       $dest = $dir.'/'.$nameOnDisk;
-      if (move_uploaded_file($files['tmp_name'][$i], $dest)) {
+      if (move_uploaded_file($tmps[$i], $dest)) {
         $url = '/uploads/products/'.$pid.'/'.$nameOnDisk;
+        $isPrimary = ((int)$i === $primaryIndex) ? 1 : 0;
         $pdo->prepare("INSERT INTO product_images(product_id,image_url,sort_order,is_primary) VALUES (:pid,:u,:so,:pr)")
-            ->execute([':pid'=>$pid, ':u'=>$url, ':so'=>$order, ':pr'=>$order===0?1:0]);
+            ->execute([':pid'=>$pid, ':u'=>$url, ':so'=>$order, ':pr'=>$isPrimary]);
         $order++;
       }
     }
+  
+    // 만약 어떤 이유로 대표가 하나도 지정되지 않았다면 첫 번째를 대표로 승격
+    $chk = $pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id=:pid AND is_primary=1");
+    $chk->execute([':pid'=>$pid]);
+    if ((int)$chk->fetchColumn() === 0) {
+      $pdo->prepare("UPDATE product_images SET is_primary=1 WHERE product_id=:pid ORDER BY sort_order ASC, id ASC LIMIT 1")
+          ->execute([':pid'=>$pid]);
+    }
+  
   } else {
     throw new Exception('메인 이미지는 1장 이상 업로드해야 합니다.');
   }

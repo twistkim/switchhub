@@ -54,20 +54,41 @@ try {
   $dir = __DIR__ . '/../uploads/products/' . $pid;
   if (!is_dir($dir)) @mkdir($dir, 0775, true);
 
-  // 메인 이미지 (최대 5)
-  if (!empty($_FILES['main_images']['name'][0])) {
-    $files = $_FILES['main_images'];
-    $count = min(5, count(array_filter($files['name'])));
+  // 메인 이미지 (최대 5) — 단일/복수 업로드 모두 지원 + 대체 필드명(images) 지원
+  $primaryIndex = isset($_POST['primary_image_index']) ? (int)$_POST['primary_image_index'] : 0;
+  $filesField = null;
+  if (!empty($_FILES['main_images'])) {
+    $filesField = $_FILES['main_images'];
+  } elseif (!empty($_FILES['images'])) { // 호환용
+    $filesField = $_FILES['images'];
+  }
+  if ($filesField) {
+    // 배열/단일 업로드를 통일
+    $names  = $filesField['name'];
+    $tmps   = $filesField['tmp_name'];
+    $errors = $filesField['error'];
+    $types  = $filesField['type'];
+    if (!is_array($names)) {
+      $names  = [$names];
+      $tmps   = [$tmps];
+      $errors = [$errors];
+      $types  = [$types];
+    }
+    $total = min(5, count($names));
     $order = 0;
-    for ($i=0; $i<$count; $i++) {
-      if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
-      $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION) ?: 'jpg';
+    for ($i = 0; $i < $total; $i++) {
+      if (!isset($names[$i]) || $names[$i] === '') continue;
+      if (!isset($errors[$i]) || $errors[$i] !== UPLOAD_ERR_OK) continue;
+      if (!is_uploaded_file($tmps[$i])) continue;
+  
+      $ext = pathinfo($names[$i], PATHINFO_EXTENSION) ?: 'jpg';
       $nameOnDisk = 'main_'.$order.'_'.bin2hex(random_bytes(4)).'.'.strtolower($ext);
-      $dest = $dir.'/'.$nameOnDisk;
-      if (move_uploaded_file($files['tmp_name'][$i], $dest)) {
+      $dest = $dir . '/' . $nameOnDisk;
+      if (move_uploaded_file($tmps[$i], $dest)) {
         $url = '/uploads/products/'.$pid.'/'.$nameOnDisk;
+        $isPrimary = ($i === $primaryIndex) ? 1 : 0;
         $pdo->prepare("INSERT INTO product_images(product_id,image_url,sort_order,is_primary) VALUES (:pid,:u,:so,:pr)")
-            ->execute([':pid'=>$pid, ':u'=>$url, ':so'=>$order, ':pr'=>$order===0?1:0]);
+            ->execute([':pid'=>$pid, ':u'=>$url, ':so'=>$order, ':pr'=>$isPrimary]);
         $order++;
       }
     }

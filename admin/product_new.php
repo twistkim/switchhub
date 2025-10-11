@@ -111,8 +111,17 @@ include __DIR__ . '/../partials/header_admin.php';
 
     <div>
       <label class="block text-sm font-medium">메인 이미지 (최대 5장)</label>
-      <input type="file" name="main_images[]" accept="image/*" multiple class="mt-1 w-full border rounded px-3 py-2">
-      <p class="text-xs text-gray-500 mt-1">* 첫 번째 이미지를 대표로 사용합니다.</p>
+      <div id="image-upload-area" class="grid grid-cols-2 gap-2">
+        <?php for ($i = 0; $i < 5; $i++): ?>
+          <div class="border p-2 rounded relative">
+            <input type="file" name="images[]" accept="image/*" class="w-full mb-2">
+            <label class="flex items-center space-x-1 text-sm">
+              <input type="radio" name="is_primary" value="<?= $i ?>" <?= $i===0 ? 'checked' : '' ?>>
+              <span>대표 이미지로 설정</span>
+            </label>
+          </div>
+        <?php endfor; ?>
+      </div>
     </div>
 
     <div>
