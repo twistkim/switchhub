@@ -59,13 +59,25 @@ include __DIR__ . '/../partials/header_partner.php';
 <?php endif; ?>
 
 <section class="mb-8">
-  <h1 class="text-2xl font-bold">파트너 대시보드</h1>
-  <p class="text-sm text-gray-500 mt-1">내 상품과 판매 내역을 한 곳에서 관리합니다.</p>
+  <h1 class="text-2xl font-bold">
+    <?= __('partner_index.1') ?: '파트너 대시보드' ?>
+  </h1>
+  <p class="text-sm text-gray-500 mt-1">
+    <?= __('partner_index.2') ?: '내 상품과 판매 내역을 한 곳에서 관리합니다.' ?>
+  </p>
   <div class="mt-3 flex flex-wrap gap-2">
-    <a href="#products" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">내 상품</a>
-    <a href="#orders" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">판매 내역</a>
-    <a href="#settlements" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">정산 현황</a>
-    <a href="<?= htmlspecialchars(lang_url('/partner/product_new.php'), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded bg-primary text-white">새 상품 등록</a>
+    <a href="#products" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">
+      <?= __('partner_index.3') ?: '내 상품' ?>
+    </a>
+    <a href="#orders" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">
+      <?= __('partner_index.4') ?: '판매 내역' ?>
+    </a>
+    <a href="#settlements" class="px-3 py-1.5 rounded border bg-white hover:bg-gray-50">
+      <?= __('partner_index.5') ?: '정산 현황' ?>
+    </a>
+    <a href="<?= htmlspecialchars(lang_url('/partner/product_new.php'), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded bg-primary text-white">
+      <?= __('partner_index.6') ?: '새 상품 등록' ?>
+    </a>
   </div>
 </section>
 
@@ -264,9 +276,12 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
 
 <a id="products"></a>
 <section class="mb-8">
-  <h2 class="text-xl font-semibold">내 상품</h2>
+  <h2 class="text-xl font-semibold">
+    <?= __('partner_index.7') ?: '내 상품' ?>
+  </h2>
   <?php if (empty($myProducts)): ?>
-    <div class="bg-white border rounded-xl shadow-sm p-8 text-center text-gray-500 mt-3">등록한 상품이 없습니다. 우측 상단의 <b>새 상품 등록</b>을 눌러 추가하세요.</div>
+    <div class="bg-white border rounded-xl shadow-sm p-8 text-center text-gray-500 mt-3">
+    <?= __('partner_index.8') ?: '등록한 상품이 없습니다. 우측 상단의 ' ?><b><?= __('partner_index.9') ?: '새 상품 등록' ?></b><?= __('partner_index.10') ?: '을 눌러 추가하세요.' ?></div>
   <?php else: ?>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
       <?php foreach ($myProducts as $p):
@@ -290,13 +305,19 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
             <div class="font-semibold truncate">#<?= (int)$p['id'] ?> · <?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></div>
             <div class="text-sm text-gray-500 mt-1"><?= number_format((float)$p['price']) ?> THB</div>
             <div class="mt-3 flex items-center gap-2">
-              <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상세</a>
-              <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">수정</a>
+              <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">
+                <?= __('partner_index.11') ?: '상세' ?>
+              </a>
+              <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$p['id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">
+                <?= __('partner_index.12') ?: '수정' ?>
+              </a>
               <form method="post" action="<?= htmlspecialchars(lang_url('/partner/product_delete.php'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('이 상품을 숨김 처리(is_deleted=1) 하시겠습니까? 주문/이미지는 보존됩니다.');">
                 <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                 <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
                 <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
-                <button class="px-3 py-1.5 rounded bg-rose-600 hover:bg-rose-700 text-white">삭제(숨김)</button>
+                <button class="px-3 py-1.5 rounded bg-rose-600 hover:bg-rose-700 text-white">
+                  <?= __('partner_index.13') ?: '삭제(숨김)' ?>
+                </button>
               </form>
             </div>
           </div>
@@ -306,13 +327,15 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
   <?php endif; ?>
 </section>
 <a id="orders"></a>
-<h2 class="text-xl font-semibold mb-3">판매 내역</h2>
+<h2 class="text-xl font-semibold mb-3">
+  <?= __('partner_index.14') ?: '판매 내역' ?>
+</h2>
 
 <?php if (empty($orders)): ?>
   <div class="bg-white border rounded-xl shadow-sm p-10 text-center text-gray-500">
-    아직 판매 내역이 없습니다.
+    <?= __('partner_index.15') ?: '아직 판매 내역이 없습니다.' ?>
     <div class="mt-3 text-xs text-gray-400">
-      (진단) 내 상품 수: <?= isset($diag['products_by_me']) ? (int)$diag['products_by_me'] : 0 ?> · 내 상품에 대한 주문 수: <?= isset($diag['orders_on_my_products']) ? (int)$diag['orders_on_my_products'] : 0 ?> · orders.seller_id 주문 수: <?= isset($diag['orders_by_orders_seller_id']) ? (int)$diag['orders_by_orders_seller_id'] : 0 ?> · path: <?= htmlspecialchars($diag['path'] ?? 'n/a', ENT_QUOTES, 'UTF-8') ?>
+    <?= __('partner_index.16') ?: '(진단) 내 상품 수: ' ?><?= isset($diag['products_by_me']) ? (int)$diag['products_by_me'] : 0 ?> <?= __('partner_index.17') ?: '· 내 상품에 대한 주문 수: ' ?><?= isset($diag['orders_on_my_products']) ? (int)$diag['orders_on_my_products'] : 0 ?> <?= __('partner_index.18') ?: '· orders.seller_id 주문 수: ' ?><?= isset($diag['orders_by_orders_seller_id']) ? (int)$diag['orders_by_orders_seller_id'] : 0 ?> · path: <?= htmlspecialchars($diag['path'] ?? 'n/a', ENT_QUOTES, 'UTF-8') ?>
     </div>
   </div>
 <?php else: ?>
@@ -346,9 +369,10 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
               <div class="font-semibold">#<?= (int)$r['order_id'] ?> · <?= htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') ?></div>
               <div class="text-primary font-bold"><?= number_format($productPrice) ?> THB</div>
             </div>
-            <div class="text-sm text-gray-600 mt-1">상태: <?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?> · 송장: <?= htmlspecialchars($r['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?> · 주문일: <?= htmlspecialchars($r['order_created_at'], ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="text-sm text-gray-600 mt-1">
+            <?= __('partner_index.19') ?: '상태: ' ?><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?> <?= __('partner_index.20') ?: '· 송장: ' ?><?= htmlspecialchars($r['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?> <?= __('partner_index.21') ?: '· 주문일: ' ?><?= htmlspecialchars($r['order_created_at'], ENT_QUOTES, 'UTF-8') ?></div>
             <div class="text-sm mt-1">
-              결제방식:
+            <?= __('partner_index.22') ?: '결제방식:' ?>
               <?php if (function_exists('render_payment_method_badge')) render_payment_method_badge($r['payment_method'] ?? null); ?>
             </div>
             <?php
@@ -356,8 +380,12 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
               $can_edit_product = !empty($r['product_id']) && !str_starts_with((string)$productName, '삭제된 상품');
               if ($can_edit_product): ?>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
-                  <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상품 보기</a>
-                  <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">상품 수정</a>
+                  <a href="<?= htmlspecialchars(lang_url('/product.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">
+                    <?= __('partner_index.23') ?: '상품 보기' ?>
+                  </a>
+                  <a href="<?= htmlspecialchars(lang_url('/partner/product_edit.php?id='.(int)$r['product_id']), ENT_QUOTES, 'UTF-8') ?>" class="px-3 py-1.5 rounded border">
+                    <?= __('partner_index.24') ?: '상품 수정' ?>
+                  </a>
                 </div>
             <?php endif; ?>
 
@@ -368,7 +396,9 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
                 <input type="hidden" name="order_id" value="<?= (int)$r['order_id'] ?>">
                 <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                 <input type="text" name="tracking_number" required class="border rounded px-3 py-1.5 text-sm" placeholder="송장번호 입력">
-                <button class="px-3 py-1.5 rounded-md bg-gray-900 text-white text-sm">송장 저장/배송중</button>
+                <button class="px-3 py-1.5 rounded-md bg-gray-900 text-white text-sm">
+                  <?= __('partner_index.25') ?: '송장 저장/배송중' ?>
+                </button>
               </form>
             <?php endif; ?>
 
@@ -378,13 +408,16 @@ if ($__DEBUG && empty($orders) && !empty($myProductIds)) {
                 <input type="hidden" name="order_id" value="<?= (int)$r['order_id'] ?>">
                 <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                 <input type="number" step="0.01" name="amount" class="border rounded px-3 py-1.5 text-sm" placeholder="정산 요청 금액(기본: 판매가)" value="<?= htmlspecialchars((string)$productPrice, ENT_QUOTES, 'UTF-8') ?>">
-                <button class="px-3 py-1.5 rounded-md bg-gray-900 text-white text-sm">정산 요청</button>
+                <button class="px-3 py-1.5 rounded-md bg-gray-900 text-white text-sm">
+                  <?= __('partner_index.26') ?: '정산 요청' ?>
+                </button>
               </form>
             <?php else: ?>
               <div class="mt-3 text-sm">
-                정산 상태: <span class="font-semibold"><?= $is_requested ? htmlspecialchars(strtoupper($settle_status), ENT_QUOTES, 'UTF-8') : '미요청' ?></span>
+              <?= __('partner_index.27') ?: '정산 상태: ' ?>
+              <span class="font-semibold"><?= $is_requested ? htmlspecialchars(strtoupper($settle_status), ENT_QUOTES, 'UTF-8') : '미요청' ?></span>
                 <?php if ($is_requested && isset($r['settlement_amount']) && $r['settlement_amount'] !== null): ?>
-                  · 금액: <span class="font-semibold"><?= number_format((float)$r['settlement_amount']) ?> THB</span>
+                  <?= __('partner_index.28') ?: '· 금액: ' ?><span class="font-semibold"><?= number_format((float)$r['settlement_amount']) ?> THB</span>
                 <?php endif; ?>
               </div>
             <?php endif; ?>
@@ -426,9 +459,13 @@ try {
 ?>
 
 <section class="mb-10">
-  <h2 class="text-xl font-semibold">정산 현황</h2>
+  <h2 class="text-xl font-semibold">
+    <?= __('partner_index.29') ?: '정산 현황' ?>
+  </h2>
   <?php if (empty($mySettlements)): ?>
-    <div class="bg-white border rounded-xl shadow-sm p-8 text-center text-gray-500 mt-3">아직 정산 요청 내역이 없습니다.</div>
+    <div class="bg-white border rounded-xl shadow-sm p-8 text-center text-gray-500 mt-3">
+      <?= __('partner_index.30') ?: '아직 정산 요청 내역이 없습니다.' ?>
+    </div>
   <?php else: ?>
     <div class="space-y-4 mt-3">
       <?php foreach ($mySettlements as $s):
@@ -447,16 +484,16 @@ try {
           </div>
           <div class="flex-1">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div class="font-semibold">정산 #<?= (int)$s['id'] ?> · 주문 #<?= (int)$s['order_id'] ?> · <?= htmlspecialchars($s['product_name'], ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="font-semibold"><?= __('partner_index.31') ?: '정산 #' ?><?= (int)$s['id'] ?> <?= __('partner_index.32') ?: '· 주문 #' ?><?= (int)$s['order_id'] ?> · <?= htmlspecialchars($s['product_name'], ENT_QUOTES, 'UTF-8') ?></div>
               <div class="text-primary font-bold"><?= number_format($amt, 2) ?> THB</div>
             </div>
             <div class="mt-1 text-sm text-gray-600">
-              정산상태: <span class="inline-block align-middle text-white text-xs font-semibold px-2.5 py-0.5 rounded <?= $badge['cls'] ?>"><?= $badge['label'] ?></span>
-              · 요청일: <?= htmlspecialchars($s['requested_at'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
-              <?php if (!empty($s['paid_at'])): ?> · 지급일: <?= htmlspecialchars($s['paid_at'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?= __('partner_index.33') ?: '정산상태: ' ?><span class="inline-block align-middle text-white text-xs font-semibold px-2.5 py-0.5 rounded <?= $badge['cls'] ?>"><?= $badge['label'] ?></span>
+            <?= __('partner_index.34') ?: '· 요청일: ' ?><?= htmlspecialchars($s['requested_at'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+              <?php if (!empty($s['paid_at'])): ?> <?= __('partner_index.35') ?: '· 지급일: ' ?><?= htmlspecialchars($s['paid_at'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
             </div>
             <?php if (!empty($s['note'])): ?>
-              <div class="mt-1 text-xs text-gray-500">메모: <?= htmlspecialchars($s['note'], ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="mt-1 text-xs text-gray-500"><?= __('partner_index.36') ?: '메모: ' ?><?= htmlspecialchars($s['note'], ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
           </div>
         </div>

@@ -152,7 +152,20 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
       hook('langDesktop');
       hook('langMobile');
     });
+
+    (function(){
+      const b = document.querySelector('.blob');
+      if (!b) return;
+      const cs = getComputedStyle(b);
+      if (cs.animationDuration === '0s' || cs.animationName === 'none') {
+        console.warn('[ambient] Animation appears inactive:', cs.animationName, cs.animationDuration);
+      }
+    })();
   </script>
+
+ 
+
 
   <!-- 메인 컨테이너 시작 -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    

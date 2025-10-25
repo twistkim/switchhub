@@ -79,7 +79,7 @@ $pageTitle = '새 쪽지 보내기';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<h1 class="text-2xl font-bold mb-4">새 쪽지 보내기</h1>
+<h1 class="text-2xl font-bold mb-4"><?= __('message_start.1') ?: '새 쪽지 보내기' ?></h1>
 <form method="post" class="space-y-4">
     <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
     <?php if ($recipientId): ?>
@@ -93,17 +93,24 @@ include __DIR__ . '/partials/header.php';
     <?php endif; ?>
 
     <div>
-        <label class="block font-medium">제목</label>
+        <label class="block font-medium">
+            <?= __('message_start.2') ?: '제목' ?>제목
+        </label>
         <input type="text" name="subject" class="w-full border rounded px-3 py-2" placeholder="제목을 입력하세요">
     </div>
     <div>
-        <label class="block font-medium">메시지</label>
+        <label class="block font-medium">
+            <?= __('message_start.3') ?: '메시지' ?>
+        </label>
         <textarea name="body" class="w-full border rounded px-3 py-2 h-32" required></textarea>
     </div>
     <div>
         <button type="submit"
-            class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">보내기</button>
+            class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
+            <?= __('message_start.4') ?: '보내기' ?>
+        </button>
     </div>
 </form>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>
+

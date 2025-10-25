@@ -118,22 +118,32 @@ include __DIR__ . '/../partials/header_partner.php';
 ?>
 
 <section class="mb-6">
-  <h1 class="text-2xl font-bold">주문 관리</h1>
-  <p class="text-gray-600 mt-2">내가 판매한 상품의 주문을 조회하고 송장/배송 상태를 관리합니다.</p>
+  <h1 class="text-2xl font-bold">
+    <?= __('partner_orders.1') ?: '주문 관리' ?>
+  </h1>
+  <p class="text-gray-600 mt-2">
+    <?= __('partner_orders.2') ?: '내가 판매한 상품의 주문을 조회하고 송장/배송 상태를 관리합니다.' ?>
+  </p>
 </section>
 
 <!-- 검색/필터 폼 -->
 <form method="get" action="/partner/orders.php" class="bg-white border rounded-xl shadow-sm p-4 mb-6">
   <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
     <div>
-      <label class="block text-xs text-gray-600 mb-1">키워드</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.3') ?: '키워드' ?>
+      </label>
       <input type="text" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>"
              placeholder="주문번호/상품/구매자/이메일" class="w-full border rounded-md px-3 py-2">
     </div>
     <div>
-      <label class="block text-xs text-gray-600 mb-1">상태</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.4') ?: '상태' ?>
+      </label>
       <select name="status" class="w-full border rounded-md px-3 py-2">
-        <option value="">전체</option>
+        <option value="">
+          <?= __('partner_orders.5') ?: '전체' ?>
+        </option>
         <?php
           $opts = [
             'awaiting_payment'=>'입금 대기중',
@@ -148,32 +158,44 @@ include __DIR__ . '/../partials/header_partner.php';
       </select>
     </div>
     <div>
-      <label class="block text-xs text-gray-600 mb-1">송장</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.6') ?: '송장' ?>
+      </label>
       <select name="tracking" class="w-full border rounded-md px-3 py-2">
-        <option value="">전체</option>
-        <option value="yes" <?= $tracking==='yes'?'selected':'' ?>>있음</option>
-        <option value="no"  <?= $tracking==='no'?'selected':''  ?>>없음</option>
+        <option value=""><?= __('partner_orders.7') ?: '전체' ?></option>
+        <option value="yes" <?= $tracking==='yes'?'selected':'' ?>><?= __('partner_orders.8') ?: '있음' ?></option>
+        <option value="no"  <?= $tracking==='no'?'selected':''  ?>><?= __('partner_orders.9') ?: '없음' ?></option>
       </select>
     </div>
     <div>
-      <label class="block text-xs text-gray-600 mb-1">페이지당</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.10') ?: '페이지당' ?>
+      </label>
       <select name="per" class="w-full border rounded-md px-3 py-2">
         <?php foreach ([10,20,30,50,100] as $n): ?>
-          <option value="<?= $n ?>" <?= $perPage===$n?'selected':'' ?>><?= $n ?>개</option>
+          <option value="<?= $n ?>" <?= $perPage===$n?'selected':'' ?>><?= $n ?><?= __('partner_orders.11') ?: '개' ?></option>
         <?php endforeach; ?>
       </select>
     </div>
     <div>
-      <label class="block text-xs text-gray-600 mb-1">기간(시작)</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.12') ?: '기간(시작)' ?>
+      </label>
       <input type="date" name="date_from" value="<?= htmlspecialchars($dateFrom, ENT_QUOTES, 'UTF-8') ?>" class="w-full border rounded-md px-3 py-2">
     </div>
     <div>
-      <label class="block text-xs text-gray-600 mb-1">기간(끝)</label>
+      <label class="block text-xs text-gray-600 mb-1">
+        <?= __('partner_orders.13') ?: '기간(끝)' ?>
+      </label>
       <input type="date" name="date_to" value="<?= htmlspecialchars($dateTo, ENT_QUOTES, 'UTF-8') ?>" class="w-full border rounded-md px-3 py-2">
     </div>
     <div class="md:col-span-2 flex items-end gap-2">
-      <button class="px-4 py-2 rounded-md bg-primary text-white font-semibold">검색</button>
-      <a href="/partner/orders.php" class="px-4 py-2 rounded-md border">초기화</a>
+      <button class="px-4 py-2 rounded-md bg-primary text-white font-semibold">
+        <?= __('partner_orders.14') ?: '검색' ?>
+      </button>
+      <a href="/partner/orders.php" class="px-4 py-2 rounded-md border">
+        <?= __('partner_orders.15') ?: '초기화' ?>
+      </a>
     </div>
   </div>
 </form>
@@ -181,12 +203,12 @@ include __DIR__ . '/../partials/header_partner.php';
 <!-- 결과/카드 리스트 -->
 <section class="space-y-4">
   <div class="text-sm text-gray-600">
-    총 <span class="font-semibold"><?= number_format($total) ?></span>건 · <?= $page ?>/<?= $totalPages ?> 페이지
+    총 <span class="font-semibold"><?= number_format($total) ?></span>건 · <?= $page ?>/<?= $totalPages ?> <?= __('partner_orders.17') ?: '페이지' ?>
   </div>
 
   <?php if (empty($rows)): ?>
     <div class="bg-white border rounded-xl shadow-sm p-8 text-gray-500 text-center">
-      검색 조건에 해당하는 주문이 없습니다.
+    <?= __('partner_orders.16') ?: '검색 조건에 해당하는 주문이 없습니다.' ?>
     </div>
   <?php else: ?>
     <?php foreach ($rows as $o):
@@ -218,15 +240,15 @@ include __DIR__ . '/../partials/header_partner.php';
             </div>
 
             <div class="mt-2 grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
-              <div><span class="text-gray-500">주문번호</span> <span class="font-medium">#<?= (int)$o['id'] ?></span></div>
-              <div><span class="text-gray-500">구매자</span> <span class="font-medium"><?= htmlspecialchars($o['buyer_name'].' ('.$o['buyer_email'].')', ENT_QUOTES, 'UTF-8') ?></span></div>
-              <div><span class="text-gray-500">가격</span> <span class="font-medium"><?= number_format((float)$o['price']) ?> THB</span></div>
-              <div><span class="text-gray-500">주문일</span> <span class="font-medium"><?= htmlspecialchars($o['created_at'], ENT_QUOTES, 'UTF-8') ?></span></div>
+              <div><span class="text-gray-500"><?= __('partner_orders.18') ?: '주문번호' ?></span> <span class="font-medium">#<?= (int)$o['id'] ?></span></div>
+              <div><span class="text-gray-500"><?= __('partner_orders.19') ?: '구매자' ?></span> <span class="font-medium"><?= htmlspecialchars($o['buyer_name'].' ('.$o['buyer_email'].')', ENT_QUOTES, 'UTF-8') ?></span></div>
+              <div><span class="text-gray-500"><?= __('partner_orders.20') ?: '가격' ?></span> <span class="font-medium"><?= number_format((float)$o['price']) ?> THB</span></div>
+              <div><span class="text-gray-500"><?= __('partner_orders.21') ?: '주문일' ?></span> <span class="font-medium"><?= htmlspecialchars($o['created_at'], ENT_QUOTES, 'UTF-8') ?></span></div>
             </div>
 
             <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div><span class="text-gray-500">송장</span> <span class="font-medium"><?= htmlspecialchars($o['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span></div>
-              <div class="text-gray-500">배송완료는 고객이 직접 확인합니다.</div>
+              <div><span class="text-gray-500"><?= __('partner_orders.22') ?: '송장' ?></span> <span class="font-medium"><?= htmlspecialchars($o['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span></div>
+              <div class="text-gray-500"><?= __('partner_orders.23') ?: '배송완료는 고객이 직접 확인합니다.' ?></div>
             </div>
 
             <!-- 파트너 액션: 송장 저장/배송중 처리만 허용 -->
@@ -240,17 +262,18 @@ include __DIR__ . '/../partials/header_partner.php';
                          placeholder="송장번호" class="px-3 py-1.5 border rounded-md text-xs">
                   <button class="px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs"
                           onclick="return confirm('송장을 저장하고 배송중으로 전환할까요?');">
-                    송장 저장/배송중
+                          <?= __('partner_orders.24') ?: '송장 저장/배송중' ?>
                   </button>
                 </form>
               <?php endif; ?>
 
               <?php if ($o['status'] === 'awaiting_payment'): ?>
-                <span class="text-xs text-gray-500">입금 확인 후 배송 처리가 가능합니다.</span>
+                <span class="text-xs text-gray-500">
+                <?= __('partner_orders.25') ?: '입금 확인 후 배송 처리가 가능합니다.' ?></span>
               <?php endif; ?>
 
               <?php if ($o['status'] === 'delivered'): ?>
-                <span class="text-xs text-green-700">배송 완료됨 (고객 확인)</span>
+                <span class="text-xs text-green-700"><?= __('partner_orders.26') ?: '배송 완료됨 (고객 확인)' ?></span>
               <?php endif; ?>
             </div>
 

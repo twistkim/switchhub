@@ -9,7 +9,7 @@
             d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M16.95 16.95l1.414 1.414M7.05 7.05L5.636 5.636M12 8l1.176 3.176L16.5 12l-3.324.824L12 16l-.824-3.176L7.5 12l3.676-.824L12 8z" />
     </svg>
   
-  원하는 폰 찾아보기
+    <?= __('search_section.1') ?: '원하는 폰 찾아보기' ?>
   </button>
 </div>
 <!-- Anchor to allow #search to scroll here -->
@@ -164,11 +164,15 @@
 
     <!-- 결제 방식 선택 (일반결제 / COD) -->
     <div class="mb-3">
-      <label class="block text-sm font-medium text-gray-800 mb-2">결제 방식</label>
+      <label class="block text-sm font-medium text-gray-800 mb-2">
+        <?= __('search_section.2') ?: '결제 방식' ?>
+      </label>
       <div class="flex items-center gap-6">
         <label class="inline-flex items-center gap-2">
           <input type="checkbox" id="payNormal" class="w-4 h-4" <?= ($pay === 'normal') ? 'checked' : '' ?>>
-          <span>일반결제</span>
+          <span>
+            <?= __('search_section.3') ?: '일반결제' ?>
+          </span>
         </label>
         <label class="inline-flex items-center gap-2">
           <input type="checkbox" id="payCOD" class="w-4 h-4" <?= ($pay === 'cod') ? 'checked' : '' ?>>
@@ -181,9 +185,9 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <!-- Lv1 -->
       <div>
-        <label class="block text-sm font-medium text-gray-800 mb-2">1차 카테고리</label>
+        <label class="block text-sm font-medium text-gray-800 mb-2"><?= __('search_section.4') ?: '1차 카테고리' ?></label>
         <select name="cat_lv1" id="catLv1" class="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary text-[15px]" onchange="window.CAT_onLv1Change && window.CAT_onLv1Change()">
-          <option value="0">카테고리를 선택하세요</option>
+          <option value="0"><?= __('search_section.5') ?: '카테고리를 선택하세요' ?></option>
           <?php foreach ($lv1Options as $r): ?>
             <option value="<?= (int)$r['id'] ?>" <?= ($selectedLv1 === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8') ?></option>
           <?php endforeach; ?>
@@ -191,12 +195,12 @@
       </div>
       <!-- Lv2 -->
       <div id="wrapLv2" class="<?= $selectedLv1 ? '' : 'hidden' ?>">
-        <label class="block text-sm font-medium text-gray-800 mb-2">2차 카테고리</label>
+        <label class="block text-sm font-medium text-gray-800 mb-2"><?= __('search_section.6') ?: '2차 카테고리' ?></label>
         <select name="cat_lv2" id="catLv2" class="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary text-[15px]" <?= $selectedLv1 ? '' : 'disabled' ?> onchange="window.CAT_onLv2Change && window.CAT_onLv2Change()">
           <?php if (!$selectedLv1): ?>
-            <option value="0">1차 카테고리를 먼저 선택하세요</option>
+            <option value="0"><?= __('search_section.7') ?: '1차 카테고리를 먼저 선택하세요' ?></option>
           <?php else: ?>
-            <option value="0">세부 카테고리를 선택하세요</option>
+            <option value="0"><?= __('search_section.8') ?: '세부 카테고리를 선택하세요' ?></option>
             <?php foreach ($lv2Options as $r): ?>
               <option value="<?= (int)$r['id'] ?>" <?= ($selectedLv2 === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8') ?></option>
             <?php endforeach; ?>
@@ -205,12 +209,12 @@
       </div>
       <!-- Lv3 -->
       <div id="wrapLv3" class="<?= $selectedLv2 ? '' : 'hidden' ?>">
-        <label class="block text-sm font-medium text-gray-800 mb-2">3차 카테고리</label>
+        <label class="block text-sm font-medium text-gray-800 mb-2"><?= __('search_section.9') ?: '3차 카테고리' ?></label>
         <select name="cat_lv3" id="catLv3" class="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary text-[15px]" <?= $selectedLv2 ? '' : 'disabled' ?> onchange="window.CAT_syncHidden && window.CAT_syncHidden()">
           <?php if (!$selectedLv2): ?>
-            <option value="0">2차 카테고리를 먼저 선택하세요</option>
+            <option value="0"><?= __('search_section.10') ?: '2차 카테고리를 먼저 선택하세요' ?></option>
           <?php else: ?>
-            <option value="0">세부 카테고리를 선택하세요</option>
+            <option value="0"><?= __('search_section.11') ?: '세부 카테고리를 선택하세요' ?></option>
             <?php foreach ($lv3Options as $r): ?>
               <option value="<?= (int)$r['id'] ?>" <?= ($selectedLv3 === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8') ?></option>
             <?php endforeach; ?>
@@ -220,7 +224,8 @@
     </div>
 
     <p class="mt-2 text-xs text-gray-500">
-      상위 카테고리만 선택해도 하위 전체를 검색합니다. (예: 1차만 선택 시 1차의 모든 2·3차 포함)
+      <?= __('search_section.12') ?: '상위 카테고리만 선택해도 하위 전체를 검색합니다. (예: 1차만 선택 시 1차의 모든 2·3차 포함)' ?>
+      
     </p>
     <div class="mt-3 sticky bottom-0 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-t pt-3 flex justify-end">
       <button type="submit" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-white font-semibold shadow-md hover:shadow-lg hover:bg-primary/90 active:scale-[0.99] transition">

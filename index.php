@@ -256,7 +256,7 @@ include __DIR__ . '/partials/header.php';
             <div class="absolute top-2 left-2 flex flex-wrap items-center gap-1 z-10">
               <span class="<?= $badgeClass ?> text-white text-xs font-semibold px-2.5 py-1 rounded-full"><?= $badgeLabel ?></span>
               <?php if ((int)($p['payment_normal'] ?? 0) === 1): ?>
-                <span class="bg-white/90 text-gray-800 text-[11px] font-medium px-2 py-0.5 rounded">일반판매</span>
+                <span class="bg-white/90 text-gray-800 text-[11px] font-medium px-2 py-0.5 rounded"><?= __('index.1') ?: '일반판매' ?></span>
               <?php endif; ?>
               <?php if ((int)($p['payment_cod'] ?? 0) === 1): ?>
                 <span class="bg-white/90 text-gray-800 text-[11px] font-medium px-2 py-0.5 rounded">COD</span>
@@ -267,7 +267,7 @@ include __DIR__ . '/partials/header.php';
           <div class="p-4">
             <h3 class="text-lg font-bold text-gray-800 truncate"><a href="/product.php?id=<?= (int)$p['id'] ?>" class="hover:underline"><?= $name ?></a></h3>
             <p class="text-gray-600 mt-1 h-10 overflow-hidden text-ellipsis text-sm"><?= $desc ?></p>
-            <?php if (function_exists('render_payment_badges')) render_payment_badges($p ?? null); ?>
+            <!-- <?php if (function_exists('render_payment_badges')) render_payment_badges($p ?? null); ?> -->
  
 
             <div class="mt-4 flex items-center justify-between gap-2">
@@ -279,7 +279,7 @@ include __DIR__ . '/partials/header.php';
                 <?php if ($showMessageBtn): ?>
                   <a href="/message_start.php?product_id=<?= (int)$p['id'] ?>"
                      class="px-4 py-2 border border-primary text-primary text-sm font-semibold rounded-md hover:bg-primary/5">
-                    <?= htmlspecialchars(__('product.message_partner') ?: '파트너에게 문의', ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars(__('product.message_partner') ?: '문의', ENT_QUOTES, 'UTF-8') ?>
                   </a>
                 <?php endif; ?>
               </div>

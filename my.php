@@ -141,20 +141,20 @@ include __DIR__ . '/partials/header.php';
 <!-- 사용자 기본 정보 -->
 <section class="mb-8">
   <div class="bg-white border rounded-xl shadow-sm p-6">
-    <h1 class="text-2xl font-bold">마이페이지</h1>
-    <p class="mt-2 text-gray-600">안녕하세요, <span class="font-semibold"><?= htmlspecialchars($me['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></span> 님</p>
+    <h1 class="text-2xl font-bold"><?= __('my.1') ?: '마이페이지' ?></h1>
+    <p class="mt-2 text-gray-600"><?= __('my.2') ?: '안녕하세요,' ?> <span class="font-semibold"><?= htmlspecialchars($me['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></span> <?= __('my.3') ?: '님,' ?></p>
 
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
       <div class="p-4 bg-gray-50 rounded-lg">
-        <div class="text-gray-500">이름</div>
+        <div class="text-gray-500"><?= __('my.4') ?: '이름' ?></div>
         <div class="font-semibold"><?= htmlspecialchars($me['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
       </div>
       <div class="p-4 bg-gray-50 rounded-lg">
-        <div class="text-gray-500">이메일</div>
+        <div class="text-gray-500"><?= __('my.5') ?: '이메일' ?></div>
         <div class="font-semibold"><?= htmlspecialchars($me['email'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
       </div>
       <div class="p-4 bg-gray-50 rounded-lg">
-        <div class="text-gray-500">역할</div>
+        <div class="text-gray-500"><?= __('my.6') ?: '역할' ?></div>
         <div class="font-semibold">
           <?php
             $r = $me['role'] ?? 'customer';
@@ -180,11 +180,11 @@ include __DIR__ . '/partials/header.php';
 
 <!-- 주문 목록 -->
 <section>
-  <h2 class="text-xl font-bold mb-4">주문 내역</h2>
+  <h2 class="text-xl font-bold mb-4"><?= __('my.7') ?: '주문 내역' ?></h2>
 
   <?php if (empty($orders)): ?>
     <div class="text-gray-500 bg-white border rounded-xl shadow-sm p-8 text-center">
-      아직 주문 내역이 없습니다.
+      <?= __('my.8') ?: '아직 주문 내역이 없습니다.' ?>
     </div>
   <?php else: ?>
     <div class="space-y-4">
@@ -214,15 +214,22 @@ include __DIR__ . '/partials/header.php';
 
             <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <div>
-                <div class="text-gray-500">주문번호</div>
-                <div class="font-medium">#<?= (int)$o['id'] ?></div>
+                <div class="text-gray-500">
+                  <?= __('my.9') ?: '주문번호' ?>
+                </div>
+                <div class="font-medium">#<?= (int)$o['id'] ?>
+              </div>
               </div>
               <div>
-                <div class="text-gray-500">주문일</div>
+                <div class="text-gray-500">
+                  <?= __('my.10') ?: '주문일' ?>
+                </div>
                 <div class="font-medium"><?= htmlspecialchars($o['created_at'], ENT_QUOTES, 'UTF-8') ?></div>
               </div>
               <div>
-                <div class="text-gray-500">송장번호</div>
+                <div class="text-gray-500">
+                  <?= __('my.11') ?: '송장번호' ?>
+                </div>
                 <div class="font-medium"><?= htmlspecialchars($o['tracking_number'] ?? '-', ENT_QUOTES, 'UTF-8') ?></div>
               </div>
             </div>
@@ -234,7 +241,9 @@ include __DIR__ . '/partials/header.php';
                 <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                 <input type="hidden" name="action" value="mark_delivered">
                 <input type="hidden" name="order_id" value="<?= (int)$o['id'] ?>">
-                <button class="px-4 py-2 rounded-md bg-primary text-white text-sm font-semibold">배송 완료 확인</button>
+                <button class="px-4 py-2 rounded-md bg-primary text-white text-sm font-semibold">
+                  <?= __('my.12') ?: '배송 완료 확인' ?>
+                </button>
               </form>
 
               
@@ -242,7 +251,7 @@ include __DIR__ . '/partials/header.php';
               <!-- 하자 신청 토글 버튼 -->
               <button type="button" class="px-4 py-2 rounded-md bg-red-50 text-red-700 text-sm font-semibold"
                       onclick="toggleClaim('claim-<?= (int)$o['id'] ?>')">
-                상품 하자 신청
+                      <?= __('my.13') ?: '상품 하자 신청' ?>
               </button>
             </div>
 
@@ -255,22 +264,24 @@ include __DIR__ . '/partials/header.php';
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label class="block text-xs text-gray-600 mb-1">이슈 유형</label>
+                    <label class="block text-xs text-gray-600 mb-1">
+                      <?= __('my.14') ?: '이슈 유형' ?>
+                    </label>
                     <select name="issue_type" class="w-full border rounded-md px-3 py-2">
-                      <option value="defect">불량/하자</option>
-                      <option value="missing">구성품 누락</option>
-                      <option value="wrong_item">오배송</option>
-                      <option value="other">기타</option>
+                      <option value="defect"><?= __('my.15') ?: '불량/하자' ?></option>
+                      <option value="missing"><?= __('my.16') ?: '구성품 누락' ?></option>
+                      <option value="wrong_item"><?= __('my.17') ?: '오배송' ?></option>
+                      <option value="other"><?= __('my.18') ?: '기타' ?></option>
                     </select>
                   </div>
                   <div class="sm:col-span-2">
-                    <label class="block text-xs text-gray-600 mb-1">상세 내용</label>
+                    <label class="block text-xs text-gray-600 mb-1"><?= __('my.19') ?: '상세 내용' ?></label>
                     <textarea name="detail" rows="3" class="w-full border rounded-md px-3 py-2" placeholder="문제 증상/상세 내용을 입력하세요."></textarea>
                   </div>
                 </div>
 
                 <div class="mt-3 flex justify-end">
-                  <button class="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-semibold">하자 신청 제출</button>
+                  <button class="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-semibold"><?= __('my.20') ?: '하자 신청 제출' ?></button>
                 </div>
               </form>
             </div>

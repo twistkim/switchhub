@@ -29,8 +29,8 @@ $cats = $pdo->query("SELECT id,name FROM categories ORDER BY name ASC")->fetchAl
 include __DIR__ . '/../partials/header_partner.php';
 ?>
 <section class="mb-6">
-  <h1 class="text-2xl font-bold">상품 수정</h1>
-  <p class="text-gray-600 mt-1">내가 등록한 상품 정보를 수정합니다.</p>
+  <h1 class="text-2xl font-bold"><?= __('partner_product_edit.1') ?: '상품 수정' ?></h1>
+  <p class="text-gray-600 mt-1"><?= __('partner_product_edit.2') ?: '내가 등록한 상품 정보를 수정합니다.' ?></p>
 </section>
 
 <form method="post" action="/partner/product_update.php" class="bg-white border rounded-xl shadow-sm p-5">

@@ -8,10 +8,10 @@
       <!-- 문구 -->
       <div class="min-w-0">
         <p class="text-[18px] leading-6 text-gray-700">
-          <span class="font-semibold text-gray-900 block md:inline">태국 중고폰 거래의</span>
-          <span class="font-semibold text-gray-900 block md:inline">새로운 기준,</span>
-          <span class="block md:inline text-gray-700">안전하고 투명하게</span>
-          <span class="block md:inline text-gray-700">구매하세요.</span>
+          <span class="font-semibold text-gray-900 block md:inline"><?= __('promo_banner.1') ?: '1' ?></span>
+          <span class="font-semibold text-gray-900 block md:inline"><?= __('promo_banner.2') ?: '2' ?></span>
+          <span class="block md:inline text-gray-700"><?= __('promo_banner.3') ?: '3' ?></span>
+          <span class="block md:inline text-gray-700"><?= __('promo_banner.4') ?: '4' ?></span>
         </p>
       </div>
 

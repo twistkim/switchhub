@@ -16,6 +16,7 @@ return [
   'nav.lang.en'     => '영어',
   'nav.lang.my'     => '미얀마어',
   'nav.partner_apply'     => '파트너',
+  
 
 
   // Home
@@ -51,6 +52,7 @@ return [
   'footer.copy'     => '© ' . date('Y') . ' 폰스위치허브. All rights reserved.',
   'footer.terms'    => '이용약관',
   'footer.privacy'  => '개인정보처리방침',
+
   // Messages (Inbox / Threads)
   'nav.messages'               => '쪽지함',
   'messages.inbox'             => '쪽지함',
@@ -76,7 +78,7 @@ return [
   'messages.contact_about_order'=> '주문 관련 문의',
 
   // Product (extra)
-  'product.message_partner'    => '파트너에게 문의',
+  'product.message_partner'    => '문의',
   'product.price.unit'    => 'THB',
 
   // Common
@@ -95,4 +97,199 @@ return [
   'product.only_after_delivery'=> '배송 완료된 주문만 리뷰를 작성할 수 있습니다.',
   'product.no_reviews'        => '아직 리뷰가 없습니다.',
   'product.write_review'      => '리뷰 쓰기',
+
+
+  //ver2
+
+  //nav
+  'nav.partner_stores' => '파트너 스토어',
+
+  //partials / promo_banner.php
+  'promo_banner.1' => '태국 중고폰 거래의',
+  'promo_banner.2' => '새로운 기준,',
+  'promo_banner.3' => '안전하고 투명하게',
+  'promo_banner.4' => '구매하세요.',
+
+  // index.php
+  'index.1' => '일반판매',
+
+  //search_section.php
+  'search_section.1' => '원하는 폰 찾아보기',
+
+  'home.search_label' => '검색',
+  'search_section.2' => '결제 방식',
+  'search_section.3' => '일반결제',
+  'search_section.4' => '1차 카테고리',
+  'search_section.5' => '카테고리를 선택하세요.',
+  'search_section.6' => '2차 카테고리',
+  'search_section.7' => '1차 카테고리를 먼저 선택하세요',
+  'search_section.8' => '세부 카테고리를 선택하세요',
+  'search_section.9' => '3차 카테고리',
+  'search_section.10' => '2차 카테고리를 먼저 선택하세요',
+  'search_section.11' => '세부 카테고리를 선택하세요',
+  'search_section.12' => '상위 카테고리만 선택해도 하위 전체를 검색합니다. (예: 1차만 선택 시 1차의 모든 2·3차 포함)',
+  
+  //message_start.php
+  'message_start.1' => '새 쪽지 보내기',
+  'message_start.2' => '제목',
+  'message_start.3' => '메시지',
+  'message_start.4' => '보내기',
+
+  //my.php
+  'my.1' => '마이페이지',
+  'my.2' => '안녕하세요,',
+  'my.3' => '님',
+  'my.4' => '이름',
+  'my.5' => '이메일',
+  'my.6' => '역할',
+  'my.7' => '주문 내역',
+  'my.8' => '아직 주문 내역이 없습니다.',
+  'my.9' => '주문번호',
+  'my.10' => '주문일',
+  'my.11' => '송장번호',
+  'my.12' => '배송 완료 확인',
+  'my.13' => '상품 하자 신청',
+  'my.14' => '이슈 유형',
+  'my.15' => '불량/하자',
+  'my.16' => '구성품 누락',
+  'my.17' => '오배송',
+  'my.18' => '기타',
+  'my.19' => '상세 내용',
+  'my.20' => '하자 신청 제출',
+
+  //partner_apply.php
+  'partner_apply.1' => '파트너 신청',
+  'partner_apply.2' => '사업자 정보를 입력해 주세요. 관리자가 검토 후 승인합니다.',
+  'partner_apply.3' => '사업자등록증 (이미지 또는 PDF, 최대 5MB)',
+  'partner_apply.4' => '허용: JPG/PNG/PDF',
+  'partner_apply.5' => '상호',
+  'partner_apply.6' => '사업자 등록번호',
+  'partner_apply.7' => '담당자 이름',
+  'partner_apply.8' => '담당자 연락처',
+  'partner_apply.9' => '은행명',
+  'partner_apply.10' => '계좌번호',
+  'partner_apply.11' => '매장 소개',
+  'partner_apply.12' => '매장 대표 이미지 (JPG/PNG, 최대 5MB)',
+  'partner_apply.13' => '이메일',
+  'partner_apply.14' => '사업장 주소',
+  'partner_apply.15' => '주소 자동완성 후 지도에서 위치를 확인하세요.',
+  'partner_apply.16' => '신청 제출',
+  'partner_apply.17' => '취소',
+
+  //cart.php
+  'cart.1' => '장바구니',
+  'cart.2' => '장바구니가 비어있습니다.',
+  'cart.3' => '계속 쇼핑하기',
+  'cart.4' => '결제 불가(승인/상태 확인 필요)',
+  'cart.5' => '제거',
+  'cart.6' => '총 결제 금액: ',
+  'cart.7' => '장바구니 비우기',
+  'cart.8' => '결제 진행하기',
+  'cart.9' => 'QR 결제',
+  'cart.10' => '아래 QR을 스캔 후, 결제 완료 버튼을 눌러주세요.',
+  'cart.11' => '결제 완료',
+  'cart.12' => '닫기',
+
+  //auth/register.php
+  'register.1' => '회원가입',
+  'register.2' => '이름',
+  'register.3' => '이메일',
+  'register.4' => '비밀번호',
+  'register.5' => '비밀번호 확인',
+  'register.6' => '회원가입',
+  'register.7' => '이미 계정이 있으신가요? ',
+  'register.8' => '로그인',
+
+  //partner/index.php
+  'partner_index.1' => '파트너 대시보드',
+  'partner_index.2' => '내 상품과 판매 내역을 한 곳에서 관리합니다.',
+  'partner_index.3' => '내 상품',
+  'partner_index.4' => '판매 내역',
+  'partner_index.5' => '정산 현황',
+  'partner_index.6' => '새 상품 등록',
+  'partner_index.7' => '내 상품',
+  'partner_index.8' => '등록한 상품이 없습니다. 우측 상단의 ',
+  'partner_index.9' => '새 상품 등록',
+  'partner_index.10' => '을 눌러 추가하세요.',
+  'partner_index.11' => '상세',
+  'partner_index.12' => '수정',
+  'partner_index.13' => '삭제(숨김)',
+  'partner_index.14' => '판매 내역',
+  'partner_index.15' => '아직 판매 내역이 없습니다.',
+  'partner_index.16' => '(진단) 내 상품 수: ',
+  'partner_index.17' => '· 내 상품에 대한 주문 수: ',
+  'partner_index.18' => '· orders.seller_id 주문 수: ',
+  'partner_index.19' => '상태: ',
+  'partner_index.20' => '· 송장: ',
+  'partner_index.21' => '· 주문일: ',
+  'partner_index.22' => '결제방식:',
+  'partner_index.23' => '상품 보기',
+  'partner_index.24' => '상품 수정',
+  'partner_index.25' => '송장 저장/배송중',
+  'partner_index.26' => '정산 요청',
+  'partner_index.27' => '정산 상태: ',
+  'partner_index.28' => '· 금액: ',
+  'partner_index.29' => '정산 현황',
+  'partner_index.30' => '아직 정산 요청 내역이 없습니다.',
+  'partner_index.31' => '정산 #',
+  'partner_index.32' => '· 주문 #',
+  'partner_index.33' => '정산상태: ',
+  'partner_index.34' => '· 요청일: ',
+  'partner_index.35' => '· 지급일: ',
+  'partner_index.36' => '메모: ',
+
+  //partner/orders.php
+  'partner_orders.1' => '주문 관리',
+  'partner_orders.2' => '내가 판매한 상품의 주문을 조회하고 송장/배송 상태를 관리합니다.',
+  'partner_orders.3' => '키워드',
+  'partner_orders.4' => '상태',
+  'partner_orders.5' => '전체',
+  'partner_orders.6' => '송장',
+  'partner_orders.7' => '전체',
+  'partner_orders.8' => '있음',
+  'partner_orders.9' => '없음',
+  'partner_orders.10' => '페이지당',
+  'partner_orders.11' => '개',
+  'partner_orders.12' => '기간(시작)',
+  'partner_orders.13' => '기간(끝)',
+  'partner_orders.14' => '검색',
+  'partner_orders.15' => '초기화',
+  'partner_orders.16' => '검색 조건에 해당하는 주문이 없습니다.',
+  'partner_orders.17' => '페이지',
+  'partner_orders.18' => '주문번호',
+  'partner_orders.19' => '구매자',
+  'partner_orders.20' => '가격',
+  'partner_orders.21' => '주문일',
+  'partner_orders.22' => '송장',
+  'partner_orders.23' => '배송완료는 고객이 직접 확인합니다.',
+  'partner_orders.24' => '송장 저장/배송중',
+  'partner_orders.25' => '입금 확인 후 배송 처리가 가능합니다.',
+  'partner_orders.26' => '배송 완료됨 (고객 확인)',
+
+  //partner/product_edit.php
+  'partner_product_edit.1' => '상품 수정',
+  'partner_product_edit.2' => '내가 등록한 상품 정보를 수정합니다.',
+
+  //partner/product_new.php
+  'partner_product_new.1' => '상품 수정',
+  'partner_product_new.2' => '관리자 승인 후 노출됩니다.',
+  'partner_product_new.3' => '상품명',
+  'partner_product_new.4' => '1차 카테고리',
+  'partner_product_new.5' => '선택',
+  'partner_product_new.6' => '2차 카테고리',
+  'partner_product_new.7' => '먼저 1차를 선택하세요',
+  'partner_product_new.8' => '3차 카테고리',
+  'partner_product_new.9' => '먼저 2차를 선택하세요',
+  'partner_product_new.10' => '가격',
+  'partner_product_new.11' => '출시년도',
+  'partner_product_new.12' => '상태',
+  'partner_product_new.13' => '미사용급',
+  'partner_product_new.14' => '상세 설명',
+  'partner_product_new.15' => '메인 이미지 (최대 5장)',
+  'partner_product_new.16' => '대표 이미지로 설정',
+  'partner_product_new.17' => '상세 설명 이미지 (1장)',
+  'partner_product_new.18' => '등록 요청',
+  'partner_product_new.19' => '취소',
+
+
 ];
