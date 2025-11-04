@@ -9,6 +9,7 @@ require_once __DIR__ . '/../i18n/bootstrap.php';
 require_once __DIR__ . '/../auth/csrf.php';
 require_once __DIR__ . '/../auth/guard.php';
 
+
 require_role('admin');
 
 $pdo = db();
@@ -56,8 +57,16 @@ $st->bindValue(':off', $offset,  PDO::PARAM_INT);
 $st->execute();
 $rows = $st->fetchAll();
 
-include __DIR__ . '/../partials/header_admin.php';
+include __DIR__ . '/../partials/header_admin.php'; ?>
+<?php
+  // 세션에 디버그가 있으면 ?dbg=1 여부와 상관없이 콘솔에 출력 (임시)
+  if (isset($_SESSION['__PU_DEBUG_READY']) && !empty($_SESSION['__PU_DEBUG'])) {
+    $logs = $_SESSION['__PU_DEBUG'];
+    unset($_SESSION['__PU_DEBUG_READY'], $_SESSION['__PU_DEBUG']);
+    echo "<script>(function(){try{var L=".json_encode($logs, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES).";if(Array.isArray(L)){for(var i=0;i<L.length;i++){console.log(L[i]);}}}catch(e){console.warn('debug render error', e);}})();</script>";
+  }
 ?>
+ 
 
 <?php if (isset($_GET['msg']) || isset($_GET['err'])): ?>
   <div class="mb-4">
@@ -67,6 +76,11 @@ include __DIR__ . '/../partials/header_admin.php';
     <?php if (isset($_GET['err'])): ?>
       <div class="p-3 rounded bg-red-50 text-red-700 text-sm mt-2"><?= htmlspecialchars($_GET['err'], ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
+  </div>
+<?php endif; ?>
+<?php if (isset($_GET['dbg']) && $_GET['dbg']=='1' && isset($_GET['err'])): ?>
+  <div style="white-space:pre-wrap;word-break:break-all;background:#fff3f3;border:1px solid #fca5a5;color:#991b1b;padding:10px;margin:10px 0;border-radius:6px;">
+    [DBG] err=<?= htmlspecialchars($_GET['err'], ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') ?>
   </div>
 <?php endif; ?>
 
@@ -90,6 +104,7 @@ include __DIR__ . '/../partials/header_admin.php';
         <option value="rejected" <?= $status==='rejected'?'selected':'' ?>>거절</option>
       </select>
     </div>
+    
     <div>
       <label class="block text-xs text-gray-600 mb-1">페이지당</label>
       <select name="per" class="w-full border rounded px-3 py-2">
@@ -182,6 +197,12 @@ include __DIR__ . '/../partials/header_admin.php';
                   <input type="hidden" name="return" value="<?= htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>">
                   <button class="px-3 py-1.5 rounded bg-gray-600 text-white text-sm">숨기기</button>
                 </form>
+
+                <div>
+                  <?php include_once __DIR__ . '/_partners_edit_button.inc.php'; ?>
+                  <!-- 각 행의 액션 영역에서: -->
+                  <?= render_partner_edit_button($r['profile_id'] ?? null, $r['id'] ?? null) ?>
+                </div>
             </div>
           </div>
         </div>
